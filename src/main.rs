@@ -27,13 +27,15 @@ async fn main() {
 
 pub struct Engine {
     rb: RigidBody,
-    gravity: i32,
+    g: i32,
+    k: f32,
 }
 impl Engine {
     pub fn new() -> Self {
         Self {
             rb: RigidBody::new(100.),
-            gravity: 0,
+            g: 0,
+            k: 0.,
         }
     }
     pub fn update(&mut self) {
@@ -43,7 +45,7 @@ impl Engine {
 
         self.update_ui();
 
-        self.rb.apply_forces(self.gravity);
+        self.rb.apply_forces(self.g, self.k);
     }
     pub fn draw(&self) {
         self.rb.draw();
@@ -52,6 +54,9 @@ impl Engine {
     fn update_ui(&mut self) {
         egui_macroquad::ui(|egui_ctx| {
             egui::Window::new("Physics Engine").show(egui_ctx, |ui| {
+                ui.label(format!("FPS: {}", get_fps()));
+                ui.separator();
+
                 ui.heading("Rigidbody");
                 ui.label(format!("Mass: {}", self.rb.mass));
                 ui.horizontal(|ui| {
@@ -68,13 +73,22 @@ impl Engine {
                 });
 
                 ui.separator();
-                
+
                 ui.heading("Forces");
+                ui.label("Gravity: ");
                 ui.horizontal(|ui| {
-                    ui.label("Gravity: ");
-                    ui.add(egui::Slider::new(&mut self.gravity, -300..=300));
+                    ui.label("g: ");
+                    ui.add(egui::Slider::new(&mut self.g, -300..=300));
                     if ui.button("Reset").clicked() {
-                        self.gravity = 0;
+                        self.g = 0;
+                    }
+                });
+                ui.label("Air resistance: ");
+                ui.horizontal(|ui| {
+                    ui.label("k: ");
+                    ui.add(egui::Slider::new(&mut self.k, (-1.)..=10.));
+                    if ui.button("Reset").clicked() {
+                        self.k = 0.;
                     }
                 });
             });
