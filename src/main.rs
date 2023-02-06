@@ -35,7 +35,7 @@ impl Engine {
         Self {
             rb: RigidBody::new(100.),
             g: 0,
-            k: 0.,
+            k: 1.,
         }
     }
     pub fn update(&mut self) {
@@ -75,7 +75,7 @@ impl Engine {
                 ui.separator();
 
                 ui.heading("Forces");
-                ui.label("Gravity: ");
+                ui.label("Gravity: m * g");
                 ui.horizontal(|ui| {
                     ui.label("g: ");
                     ui.add(egui::Slider::new(&mut self.g, -300..=300));
@@ -83,7 +83,7 @@ impl Engine {
                         self.g = 0;
                     }
                 });
-                ui.label("Air resistance: ");
+                ui.label("Air resistance: k * v*v");
                 ui.horizontal(|ui| {
                     ui.label("k: ");
                     ui.add(egui::Slider::new(&mut self.k, (-1.)..=10.));

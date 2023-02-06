@@ -23,7 +23,7 @@ impl RigidBody {
 
         let mut f_res = Vec2::new(0., 0.);
 
-        //F_Air = 0.5 * p * A * v*v = k * A * v*v in our case because k = 0.5 * p * A
+        //F_Air = 0.5 * p * A * v*v = k\ * v*v in our case because k = 0.5 * p * A
         f_res -= k * self.vel*self.vel.abs();
 
         //Fz = m * g
