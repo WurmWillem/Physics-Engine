@@ -1,75 +1,84 @@
-#![allow(non_snake_case)]
+use egui_macroquad::egui;
 use macroquad::prelude::*;
 
-const SCREEN_WIDTH: f32 = 800.;
-const SCREEN_HEIGHT: f32 = 700.;
-const GRAVITY: f32 = 9.81 * 30.;
+mod rigid_body;
+use rigid_body::RigidBody;
+
+pub const SCREEN_WIDTH: f32 = 800.;
+pub const SCREEN_HEIGHT: f32 = 700.;
 
 #[macroquad::main("Physics Engine")]
 async fn main() {
     request_new_screen_size(SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    let mut rb = RigidBody::new(100.);
+    let mut engine = Engine::new();
 
     loop {
         clear_background(LIGHTGRAY);
 
-        rb.apply_forces();
-        rb.draw();
+        engine.update();
+        engine.draw();
+
+        egui_macroquad::draw();
 
         next_frame().await
     }
 }
 
-struct RigidBody {
-    mass: f32,
-    pos: Vec2,
-    vel: Vec2,
-    size: Vec2,
+pub struct Engine {
+    rb: RigidBody,
+    gravity: i32,
 }
-impl RigidBody {
-    pub fn new(mass: f32) -> Self {
+impl Engine {
+    pub fn new() -> Self {
         Self {
-            mass,
-            pos: Vec2::new(SCREEN_WIDTH * 0.5, SCREEN_HEIGHT * 0.8),
-            vel: Vec2::new(0., 0.),
-            size: Vec2::new(80., 80.),
+            rb: RigidBody::new(100.),
+            gravity: 0,
         }
     }
-    pub fn apply_forces(&mut self) {
-        let delta_t = get_frame_time();
-
-        let mut f_res = Vec2::new(0., 0.);
-
-        //Fz = m * a
-        f_res.y -= GRAVITY * self.mass;
-
-        //a = f / m
-        let acc = f_res / self.mass;
-
-        //v = u + a * dt
-        self.vel += acc * delta_t;
-
-        //p = p + v * dt
-        let next_pos = self.pos + self.vel * delta_t;
-
-        //s = (u + a * dt)dt = a * dtdt + u * dt
-
-        if next_pos.y - self.size.y > 0. {
-            self.pos = next_pos;
-        } else {
-            self.vel.y = 0.;
-            self.pos.y = self.size.y;
+    pub fn update(&mut self) {
+        if is_key_pressed(KeyCode::R) {
+            self.rb = RigidBody::new(100.);
         }
+
+        self.update_ui();
+
+        self.rb.apply_forces(self.gravity);
     }
     pub fn draw(&self) {
-        draw_rectangle(
-            self.pos.x,
-            SCREEN_HEIGHT - self.pos.y,
-            self.size.x,
-            self.size.y,
-            RED,
-        );
+        self.rb.draw();
+    }
+
+    fn update_ui(&mut self) {
+        egui_macroquad::ui(|egui_ctx| {
+            egui::Window::new("Physics Engine").show(egui_ctx, |ui| {
+                ui.heading("Rigidbody");
+                ui.label(format!("Mass: {}", self.rb.mass));
+                ui.horizontal(|ui| {
+                    ui.label(format!("Velocity: {}", self.rb.vel));
+                    if ui.button("Reset").clicked() {
+                        self.rb.vel = Vec2::new(0., 0.);
+                    }
+                });
+                ui.horizontal(|ui| {
+                    ui.label(format!("Position: {}", self.rb.pos));
+                    if ui.button("Reset").clicked() {
+                        self.rb.pos = Vec2::new(SCREEN_WIDTH * 0.5, SCREEN_HEIGHT * 0.5);
+                    }
+                });
+
+                ui.separator();
+                
+                ui.heading("Forces");
+                ui.horizontal(|ui| {
+                    ui.label("Gravity: ");
+                    ui.add(egui::Slider::new(&mut self.gravity, -300..=300));
+                    if ui.button("Reset").clicked() {
+                        self.gravity = 0;
+                    }
+                });
+            });
+        });
     }
 }
 
