@@ -18,7 +18,7 @@ async fn main() {
 
         engine.update();
         engine.draw();
-        
+
         egui_macroquad::draw();
 
         next_frame().await
@@ -27,27 +27,58 @@ async fn main() {
 
 pub struct Engine {
     rb: RigidBody,
+    gravity: i32,
 }
 impl Engine {
     pub fn new() -> Self {
-        Self { rb: RigidBody::new(100.) }
+        Self {
+            rb: RigidBody::new(100.),
+            gravity: 0,
+        }
     }
     pub fn update(&mut self) {
-        let mut gravity = 10;
+        if is_key_pressed(KeyCode::R) {
+            self.rb = RigidBody::new(100.);
+        }
 
-        egui_macroquad::ui(|egui_ctx| {
-            egui::Window::new("Physics Engine").show(egui_ctx, |ui| {
-                ui.heading("Forces");
-                ui.horizontal(|ui| {
-                    ui.label("Gravity: ");
-                });
-                ui.add(egui::Slider::new(&mut gravity, 0..=120).text("gravity"));
-            });
-        });
-        self.rb.apply_forces();
+        self.update_ui();
+
+        self.rb.apply_forces(self.gravity);
     }
     pub fn draw(&self) {
         self.rb.draw();
+    }
+
+    fn update_ui(&mut self) {
+        egui_macroquad::ui(|egui_ctx| {
+            egui::Window::new("Physics Engine").show(egui_ctx, |ui| {
+                ui.heading("Rigidbody");
+                ui.label(format!("Mass: {}", self.rb.mass));
+                ui.horizontal(|ui| {
+                    ui.label(format!("Velocity: {}", self.rb.vel));
+                    if ui.button("Reset").clicked() {
+                        self.rb.vel = Vec2::new(0., 0.);
+                    }
+                });
+                ui.horizontal(|ui| {
+                    ui.label(format!("Position: {}", self.rb.pos));
+                    if ui.button("Reset").clicked() {
+                        self.rb.pos = Vec2::new(SCREEN_WIDTH * 0.5, SCREEN_HEIGHT * 0.5);
+                    }
+                });
+
+                ui.separator();
+                
+                ui.heading("Forces");
+                ui.horizontal(|ui| {
+                    ui.label("Gravity: ");
+                    ui.add(egui::Slider::new(&mut self.gravity, -300..=300));
+                    if ui.button("Reset").clicked() {
+                        self.gravity = 0;
+                    }
+                });
+            });
+        });
     }
 }
 

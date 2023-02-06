@@ -1,30 +1,30 @@
+//use egui_macroquad::egui;
 use macroquad::prelude::*;
 
 use crate::{SCREEN_HEIGHT, SCREEN_WIDTH};
 
-const GRAVITY: f32 = 9.81 * 30.;
 pub struct RigidBody {
-    mass: f32,
-    pos: Vec2,
-    vel: Vec2,
+    pub mass: f32,
+    pub pos: Vec2,
+    pub vel: Vec2,
     size: Vec2,
 }
 impl RigidBody {
     pub fn new(mass: f32) -> Self {
         Self {
             mass,
-            pos: Vec2::new(SCREEN_WIDTH * 0.5, SCREEN_HEIGHT * 0.8),
+            pos: Vec2::new(SCREEN_WIDTH * 0.5, SCREEN_HEIGHT * 0.5),
             vel: Vec2::new(0., 0.),
             size: Vec2::new(80., 80.),
         }
     }
-    pub fn apply_forces(&mut self) {
+    pub fn apply_forces(&mut self, gravity: i32) {
         let delta_t = get_frame_time();
 
         let mut f_res = Vec2::new(0., 0.);
 
         //Fz = m * a
-        f_res.y -= GRAVITY * self.mass;
+        f_res.y -= gravity as f32 * self.mass;
 
         //a = f / m
         let acc = f_res / self.mass;
@@ -44,6 +44,7 @@ impl RigidBody {
             self.pos.y = self.size.y;
         }
     }
+
     pub fn draw(&self) {
         draw_rectangle(
             self.pos.x,
