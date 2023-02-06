@@ -1,15 +1,20 @@
-use egui_macroquad::egui;
 use macroquad::prelude::*;
 
+mod engine;
 mod rigid_body;
-use rigid_body::RigidBody;
 
-pub const SCREEN_WIDTH: f32 = 800.;
-pub const SCREEN_HEIGHT: f32 = 700.;
+use engine::Engine;
+
+pub const SCREEN_SIZE: Vec2 = Vec2::new(800., 700.);
+pub const SCREEN_SIZE_METRES: Vec2 = Vec2::new(20., 17.5);
+pub const METRES_TO_PIXELS: Vec2 = Vec2::new(
+    SCREEN_SIZE.x / SCREEN_SIZE_METRES.x,
+    SCREEN_SIZE.y / SCREEN_SIZE_METRES.y,
+);
 
 #[macroquad::main("Physics Engine")]
 async fn main() {
-    request_new_screen_size(SCREEN_WIDTH, SCREEN_HEIGHT);
+    request_new_screen_size(SCREEN_SIZE.x, SCREEN_SIZE.y);
 
     let mut engine = Engine::new();
 
@@ -22,77 +27,6 @@ async fn main() {
         egui_macroquad::draw();
 
         next_frame().await
-    }
-}
-
-pub struct Engine {
-    rb: RigidBody,
-    g: i32,
-    k: f32,
-}
-impl Engine {
-    pub fn new() -> Self {
-        Self {
-            rb: RigidBody::new(100.),
-            g: 0,
-            k: 1.,
-        }
-    }
-    pub fn update(&mut self) {
-        if is_key_pressed(KeyCode::R) {
-            self.rb = RigidBody::new(100.);
-        }
-
-        self.update_ui();
-
-        self.rb.apply_forces(self.g, self.k);
-    }
-    pub fn draw(&self) {
-        self.rb.draw();
-    }
-
-    fn update_ui(&mut self) {
-        egui_macroquad::ui(|egui_ctx| {
-            egui::Window::new("Physics Engine").show(egui_ctx, |ui| {
-                ui.label(format!("FPS: {}", get_fps()));
-                ui.separator();
-
-                ui.heading("Rigidbody");
-                ui.label(format!("Mass: {}", self.rb.mass));
-                ui.horizontal(|ui| {
-                    ui.label(format!("Velocity: {}", self.rb.vel));
-                    if ui.button("Reset").clicked() {
-                        self.rb.vel = Vec2::new(0., 0.);
-                    }
-                });
-                ui.horizontal(|ui| {
-                    ui.label(format!("Position: {}", self.rb.pos));
-                    if ui.button("Reset").clicked() {
-                        self.rb.pos = Vec2::new(SCREEN_WIDTH * 0.5, SCREEN_HEIGHT * 0.5);
-                    }
-                });
-
-                ui.separator();
-
-                ui.heading("Forces");
-                ui.label("Gravity: m * g");
-                ui.horizontal(|ui| {
-                    ui.label("g: ");
-                    ui.add(egui::Slider::new(&mut self.g, -300..=300));
-                    if ui.button("Reset").clicked() {
-                        self.g = 0;
-                    }
-                });
-                ui.label("Air resistance: k * v*v");
-                ui.horizontal(|ui| {
-                    ui.label("k: ");
-                    ui.add(egui::Slider::new(&mut self.k, (-1.)..=10.));
-                    if ui.button("Reset").clicked() {
-                        self.k = 0.;
-                    }
-                });
-            });
-        });
     }
 }
 
