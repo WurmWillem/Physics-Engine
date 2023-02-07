@@ -1,7 +1,6 @@
-//use egui_macroquad::egui;
 use macroquad::prelude::*;
 
-use crate::{pr, METRES_TO_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
+use crate::{METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
 
 pub struct RigidBody {
     pub mass: f32,
@@ -64,10 +63,10 @@ impl RigidBody {
 
     pub fn draw(&self) {
         draw_rectangle(
-            self.pos.x * METRES_TO_PIXELS.x,
-            SCREEN_SIZE.y - self.pos.y * METRES_TO_PIXELS.y,
-            self.size.x * METRES_TO_PIXELS.x,
-            self.size.y * METRES_TO_PIXELS.y,
+            self.pos.x * METRE_IN_PIXELS.x,
+            SCREEN_SIZE.y - self.pos.y * METRE_IN_PIXELS.y,
+            self.size.x * METRE_IN_PIXELS.x,
+            self.size.y * METRE_IN_PIXELS.y,
             RED,
         );
     }

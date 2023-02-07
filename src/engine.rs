@@ -1,19 +1,21 @@
 use egui_macroquad::egui;
 use macroquad::prelude::*;
 
-use crate::{rigid_body::RigidBody, SCREEN_SIZE_METRES};
+use crate::{rigid_body::RigidBody, METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
 
 pub struct Engine {
     rb: RigidBody,
     g: f32,
     k: f32,
+    square_tex: Texture2D,
 }
 impl Engine {
-    pub fn new() -> Self {
+    pub fn new(square_tex: Texture2D) -> Self {
         Self {
             rb: RigidBody::new(90.),
             g: 0.,
             k: 1.,
+            square_tex,
         }
     }
     pub fn update(&mut self) {
@@ -21,9 +23,10 @@ impl Engine {
         self.rb.apply_forces(self.g, self.k);
     }
     pub fn draw(&self) {
+        draw_background();
         self.rb.draw();
     }
-
+    
     fn update_ui(&mut self) {
         egui_macroquad::ui(|egui_ctx| {
             egui::Window::new("Physics Engine").show(egui_ctx, |ui| {
@@ -31,18 +34,16 @@ impl Engine {
                 ui.label(format!("FPS: {}", get_fps()));
                 ui.label(format!("World size: {} m", SCREEN_SIZE_METRES));
                 if ui.button("Reset all").clicked() {
-                    *self = Engine::new();
+                    *self = Engine::new(self.square_tex);
                 }
                 ui.separator();
 
                 ui.heading("Rigidbody");
-                //ui.label(format!("Mass: {} kg", self.rb.mass));
                 ui.horizontal(|ui| {
                     ui.label("Mass:");
                     ui.add(egui::Slider::new(&mut self.rb.mass, (0.1)..=100.));
                     ui.label("kg");
                 });
-
                 ui.label(format!("Size: {} m", self.rb.size));
                 ui.horizontal(|ui| {
                     ui.label(format!("Velocity: {} m/s", vec2_formatted(self.rb.vel)));
@@ -64,6 +65,7 @@ impl Engine {
 
                 ui.heading("Forces");
                 ui.label(format!("F_res = {}", vec2_formatted(self.rb.f_res)));
+                
                 ui.label(format!("Gravity: m * g = {} N", self.rb.f_g));
                 ui.horizontal(|ui| {
                     ui.label("g:");
@@ -75,10 +77,14 @@ impl Engine {
                         self.g = 0.;
                     }
                 });
-                ui.label(format!("Air resistance: k * v*v = {}", vec2_formatted(self.rb.f_air)));
+
+                ui.label(format!(
+                    "Air resistance: k * v*v = {}",
+                    vec2_formatted(self.rb.f_air)
+                ));
                 ui.horizontal(|ui| {
                     ui.label("k:");
-                    ui.add(egui::Slider::new(&mut self.k, (-1.)..=10.));
+                    ui.add(egui::Slider::new(&mut self.k, (-1.)..=30.));
                     if ui.button("Reset to default").clicked() {
                         self.k = 1.;
                     }
@@ -88,6 +94,29 @@ impl Engine {
                 });
             });
         });
+    }
+}
+
+fn draw_background() {
+    for x in 0..(SCREEN_SIZE_METRES.x as usize) {
+        draw_line(
+            x as f32 * METRE_IN_PIXELS.x,
+            0.,
+            x as f32 * METRE_IN_PIXELS.x,
+            SCREEN_SIZE.y,
+            1.,
+            BLACK,
+        )
+    }
+    for y in 0..(SCREEN_SIZE_METRES.y as usize) {
+        draw_line(
+            0.,
+            y as f32 * METRE_IN_PIXELS.y,
+            SCREEN_SIZE.x,
+            y as f32 * METRE_IN_PIXELS.y,
+            1.,
+            BLACK,
+        )
     }
 }
 
