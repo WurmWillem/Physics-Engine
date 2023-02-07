@@ -18,7 +18,7 @@ impl RigidBody {
             size: Vec2::new(2., 2.),
         }
     }
-    pub fn apply_forces(&mut self, g: i32, k: f32) {
+    pub fn apply_forces(&mut self, g: f32, k: f32) {
         let delta_t = get_frame_time();
 
         let mut f_res = Vec2::ZERO;
@@ -27,7 +27,7 @@ impl RigidBody {
         f_res -= k * self.vel * self.vel.abs();
 
         //Fz = m * g
-        f_res.y -= g as f32 * self.mass;
+        f_res.y -= g * self.mass;
 
         //a = f / m
         let acc = f_res / self.mass;
