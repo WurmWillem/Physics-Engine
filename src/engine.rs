@@ -43,12 +43,9 @@ impl Engine {
                         self.pause = !self.pause;
                     }
                 });
-
                 ui.separator();
 
-                ui.heading("Forces");
-                ui.label(format!("F_res = {}", vec2_formatted(self.rb.f_res)));
-                ui.label(format!("Gravity: m * g = {} N", self.rb.f_g));
+                ui.heading("Variables");
                 ui.horizontal(|ui| {
                     ui.label("g:");
                     ui.add(egui::Slider::new(&mut self.g, (-30.)..=30.));
@@ -60,10 +57,6 @@ impl Engine {
                     }
                 });
 
-                ui.label(format!(
-                    "Air resistance: k * v*v = {}",
-                    vec2_formatted(self.rb.f_air)
-                ));
                 ui.horizontal(|ui| {
                     ui.label("k:");
                     ui.add(egui::Slider::new(&mut self.k, (-1.)..=30.));
@@ -87,7 +80,7 @@ fn draw_background() {
             0.,
             x as f32 * METRE_IN_PIXELS.x,
             SCREEN_SIZE.y,
-            0.7,
+            0.5,
             BLACK,
         )
     }
@@ -97,7 +90,7 @@ fn draw_background() {
             SCREEN_SIZE.y - y as f32 * METRE_IN_PIXELS.y,
             SCREEN_SIZE.x,
             SCREEN_SIZE.y - y as f32 * METRE_IN_PIXELS.y,
-            0.7,
+            0.5,
             BLACK,
         )
     }
@@ -109,11 +102,4 @@ fn draw_background() {
         METRE_IN_PIXELS.y * 2.,
         BROWN,
     )
-}
-
-pub fn vec2_formatted(vec: Vec2) -> Vec2 {
-    let v = vec * 100.;
-    let x = v.x as i32 as f32 / 100.;
-    let y = v.y as i32 as f32 / 100.;
-    Vec2::new(x, y)
 }

@@ -1,7 +1,7 @@
 use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
-use crate::{engine::vec2_formatted, METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
+use crate::{METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
 
 pub struct RigidBody {
     pub mass: f32,
@@ -74,9 +74,10 @@ impl RigidBody {
 
     pub fn update_ui(&mut self, egui_ctx: &Context) {
         egui::Window::new("Rigidbody").show(egui_ctx, |ui| {
+            ui.heading("Data");
             ui.horizontal(|ui| {
                 ui.label("Mass:");
-                ui.add(egui::Slider::new(&mut self.mass, (0.1)..=100.));
+                ui.add(egui::Slider::new(&mut self.mass, (0.1)..=300.));
                 ui.label("kg");
             });
 
@@ -94,10 +95,32 @@ impl RigidBody {
                     self.pos = Vec2::new(SCREEN_SIZE_METRES.x * 0.5, SCREEN_SIZE_METRES.y * 0.5);
                 }
             });
-
             if ui.button("Reset all").clicked() {
                 *self = RigidBody::new(90.);
             }
+            ui.separator();
+
+            ui.heading("Forces");
+            ui.label(format!("F_res = {}", vec2_formatted(self.f_res)));
+            ui.label(format!("Gravity: m * g = {} N", self.f_g));
+            ui.label(format!(
+                "Air resistance: k * v*v = {} = {} N",
+                vec2_formatted(self.f_air),
+                f32_formatted(self.f_air.length())
+            ));
         });
     }
+}
+
+fn vec2_formatted(vec: Vec2) -> Vec2 {
+    let v = vec * 100.;
+    let x = v.x as i32 as f32 / 100.;
+    let y = v.y as i32 as f32 / 100.;
+    Vec2::new(x, y)
+}
+
+fn f32_formatted(f: f32) -> f32 {
+    let f = f * 100.;
+    let f = f as i32 as f32;
+    f / 100.
 }
