@@ -1,6 +1,7 @@
+use egui_macroquad::egui::{self, Context, Ui};
 use macroquad::prelude::*;
 
-use crate::{METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
+use crate::{engine::vec2_formatted, METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
 
 pub struct RigidBody {
     pub mass: f32,
@@ -69,5 +70,34 @@ impl RigidBody {
             self.size.y * METRE_IN_PIXELS.y,
             RED,
         );
+    }
+
+    pub fn update_ui(&mut self, egui_ctx: &Context) {
+        egui::Window::new("Rigidbody").show(egui_ctx, |ui| {
+            ui.horizontal(|ui| {
+                ui.label("Mass:");
+                ui.add(egui::Slider::new(&mut self.mass, (0.1)..=100.));
+                ui.label("kg");
+            });
+
+            ui.label(format!("Size: {} m", self.size));
+            ui.horizontal(|ui| {
+                ui.label(format!("Velocity: {} m/s", vec2_formatted(self.vel)));
+                if ui.button("Reset").clicked() {
+                    self.vel = Vec2::new(0., 0.);
+                }
+            });
+
+            ui.horizontal(|ui| {
+                ui.label(format!("Position: {} m", vec2_formatted(self.pos)));
+                if ui.button("Reset").clicked() {
+                    self.pos = Vec2::new(SCREEN_SIZE_METRES.x * 0.5, SCREEN_SIZE_METRES.y * 0.5);
+                }
+            });
+
+            if ui.button("Reset all").clicked() {
+                *self = RigidBody::new(90.);
+            }
+        });
     }
 }

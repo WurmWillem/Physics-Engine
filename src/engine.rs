@@ -26,7 +26,7 @@ impl Engine {
         draw_background();
         self.rb.draw();
     }
-    
+
     fn update_ui(&mut self) {
         egui_macroquad::ui(|egui_ctx| {
             egui::Window::new("Physics Engine").show(egui_ctx, |ui| {
@@ -38,34 +38,8 @@ impl Engine {
                 }
                 ui.separator();
 
-                ui.heading("Rigidbody");
-                ui.horizontal(|ui| {
-                    ui.label("Mass:");
-                    ui.add(egui::Slider::new(&mut self.rb.mass, (0.1)..=100.));
-                    ui.label("kg");
-                });
-                ui.label(format!("Size: {} m", self.rb.size));
-                ui.horizontal(|ui| {
-                    ui.label(format!("Velocity: {} m/s", vec2_formatted(self.rb.vel)));
-                    if ui.button("Reset").clicked() {
-                        self.rb.vel = Vec2::new(0., 0.);
-                    }
-                });
-                ui.horizontal(|ui| {
-                    ui.label(format!("Position: {} m", vec2_formatted(self.rb.pos)));
-                    if ui.button("Reset").clicked() {
-                        self.rb.pos =
-                            Vec2::new(SCREEN_SIZE_METRES.x * 0.5, SCREEN_SIZE_METRES.y * 0.5);
-                    }
-                });
-                if ui.button("Reset all").clicked() {
-                    self.rb = RigidBody::new(90.);
-                }
-                ui.separator();
-
                 ui.heading("Forces");
                 ui.label(format!("F_res = {}", vec2_formatted(self.rb.f_res)));
-                
                 ui.label(format!("Gravity: m * g = {} N", self.rb.f_g));
                 ui.horizontal(|ui| {
                     ui.label("g:");
@@ -93,6 +67,7 @@ impl Engine {
                     }
                 });
             });
+            self.rb.update_ui(egui_ctx);
         });
     }
 }
@@ -120,7 +95,7 @@ fn draw_background() {
     }
 }
 
-fn vec2_formatted(vec: Vec2) -> Vec2 {
+pub fn vec2_formatted(vec: Vec2) -> Vec2 {
     let v = vec * 100.;
     let x = v.x as i32 as f32 / 100.;
     let y = v.y as i32 as f32 / 100.;
