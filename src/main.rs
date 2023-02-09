@@ -16,9 +16,7 @@ pub const METRE_IN_PIXELS: Vec2 = Vec2::new(
 async fn main() {
     request_new_screen_size(SCREEN_SIZE.x, SCREEN_SIZE.y);
 
-    let square_tex = load_texture("square.png").await.unwrap();
-
-    let mut engine = Engine::new(square_tex);
+    let mut engine = Engine::new();
 
     loop {
         clear_background(LIGHTGRAY);

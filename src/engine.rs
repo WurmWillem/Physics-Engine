@@ -7,20 +7,22 @@ pub struct Engine {
     rb: RigidBody,
     g: f32,
     k: f32,
-    square_tex: Texture2D,
+    pause: bool,
 }
 impl Engine {
-    pub fn new(square_tex: Texture2D) -> Self {
+    pub fn new() -> Self {
         Self {
             rb: RigidBody::new(90.),
+            pause: false,
             g: 0.,
             k: 1.,
-            square_tex,
         }
     }
     pub fn update(&mut self) {
         self.update_ui();
-        self.rb.apply_forces(self.g, self.k);
+        if !self.pause {
+            self.rb.apply_forces(self.g, self.k);
+        }
     }
     pub fn draw(&self) {
         draw_background();
@@ -33,9 +35,15 @@ impl Engine {
                 ui.heading("General");
                 ui.label(format!("FPS: {}", get_fps()));
                 ui.label(format!("World size: {} m", SCREEN_SIZE_METRES));
-                if ui.button("Reset all").clicked() {
-                    *self = Engine::new(self.square_tex);
-                }
+                ui.horizontal(|ui| {
+                    if ui.button("Reset all").clicked() {
+                        *self = Engine::new();
+                    }
+                    if ui.button("Pause").clicked() {
+                        self.pause = !self.pause;
+                    }
+                });
+                
                 ui.separator();
 
                 ui.heading("Forces");
