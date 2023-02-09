@@ -1,4 +1,4 @@
-use egui_macroquad::egui::{self, Context, Ui};
+use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
 use crate::{engine::vec2_formatted, METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
@@ -50,9 +50,9 @@ impl RigidBody {
             self.vel.y = 0.;
             self.pos.y = SCREEN_SIZE_METRES.y;
             f_res = Vec2::ZERO;
-        } else if next_pos.y - self.size.y < 0. {
+        } else if next_pos.y - self.size.y < 1. {
             self.vel.y = 0.;
-            self.pos.y = self.size.y;
+            self.pos.y = self.size.y + 1.;
             f_res = Vec2::ZERO;
         } else {
             self.pos = next_pos;

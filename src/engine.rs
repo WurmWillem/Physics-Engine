@@ -73,7 +73,7 @@ impl Engine {
 }
 
 fn draw_background() {
-    for x in 0..(SCREEN_SIZE_METRES.x as usize) {
+    for x in 0..=(SCREEN_SIZE_METRES.x as usize) {
         draw_line(
             x as f32 * METRE_IN_PIXELS.x,
             0.,
@@ -83,16 +83,27 @@ fn draw_background() {
             BLACK,
         )
     }
-    for y in 0..(SCREEN_SIZE_METRES.y as usize) {
+    for y in 0..=(SCREEN_SIZE_METRES.y as usize) {
         draw_line(
             0.,
-            y as f32 * METRE_IN_PIXELS.y,
+            SCREEN_SIZE.y - y as f32 * METRE_IN_PIXELS.y,
             SCREEN_SIZE.x,
-            y as f32 * METRE_IN_PIXELS.y,
+            SCREEN_SIZE.y - y as f32 * METRE_IN_PIXELS.y,
             1.,
             BLACK,
         )
     }
+    for y in 0..=(METRE_IN_PIXELS.y as usize) {
+        draw_line(
+            0.,
+            SCREEN_SIZE.y - y as f32,
+            SCREEN_SIZE.x,
+            SCREEN_SIZE.y - y as f32,
+            1.,
+            BROWN,
+        )
+    }
+    
 }
 
 pub fn vec2_formatted(vec: Vec2) -> Vec2 {
