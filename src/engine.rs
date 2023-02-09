@@ -43,7 +43,7 @@ impl Engine {
                         self.pause = !self.pause;
                     }
                 });
-                
+
                 ui.separator();
 
                 ui.heading("Forces");
@@ -87,7 +87,7 @@ fn draw_background() {
             0.,
             x as f32 * METRE_IN_PIXELS.x,
             SCREEN_SIZE.y,
-            1.,
+            0.7,
             BLACK,
         )
     }
@@ -97,21 +97,18 @@ fn draw_background() {
             SCREEN_SIZE.y - y as f32 * METRE_IN_PIXELS.y,
             SCREEN_SIZE.x,
             SCREEN_SIZE.y - y as f32 * METRE_IN_PIXELS.y,
-            1.,
+            0.7,
             BLACK,
         )
     }
-    for y in 0..=(METRE_IN_PIXELS.y as usize) {
-        draw_line(
-            0.,
-            SCREEN_SIZE.y - y as f32,
-            SCREEN_SIZE.x,
-            SCREEN_SIZE.y - y as f32,
-            1.,
-            BROWN,
-        )
-    }
-    
+    draw_line(
+        0.,
+        SCREEN_SIZE.y,
+        SCREEN_SIZE.x,
+        SCREEN_SIZE.y,
+        METRE_IN_PIXELS.y * 2.,
+        BROWN,
+    )
 }
 
 pub fn vec2_formatted(vec: Vec2) -> Vec2 {
