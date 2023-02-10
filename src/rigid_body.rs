@@ -15,12 +15,12 @@ pub struct RigidBody {
     default_mass: f32,
 }
 impl RigidBody {
-    pub fn new(mass: f32, pos: Vec2) -> Self {
+    pub fn new(mass: f32, pos: Vec2, size: Vec2) -> Self {
         Self {
             mass,
             pos,
             vel: Vec2::ZERO,
-            size: Vec2::new(2., 2.),
+            size,
             f_res: Vec2::ZERO,
             f_g: 0.,
             f_air: Vec2::ZERO,
@@ -78,46 +78,49 @@ impl RigidBody {
 
     pub fn update_ui(&mut self, egui_ctx: &Context, index: usize) {
         egui::Window::new(format!("Rigidbody {index}")).show(egui_ctx, |ui| {
-            ui.set_max_width(100.);
+            ui.collapsing("Show", |ui| {
+                ui.set_max_width(100.);
 
-            ui.heading("Data");
-            ui.horizontal(|ui| {
-                ui.label("Mass:");
-                ui.add(egui::Slider::new(&mut self.mass, (0.1)..=300.));
-                ui.label("kg");
-            });
-
-            ui.label(format!("Size: {} m", self.size));
-            ui.horizontal(|ui| {
-                ui.label(format!("Velocity: {} m/s", vec2_formatted(self.vel)));
-                if ui.button("Reset").clicked() {
-                    self.vel = Vec2::new(0., 0.);
+                ui.heading("Data");
+                ui.horizontal(|ui| {
+                    ui.label("Mass:");
+                    ui.add(egui::Slider::new(&mut self.mass, (0.1)..=300.));
+                    ui.label("kg");
+                });
+    
+                ui.label(format!("Size: {} m", self.size));
+                ui.horizontal(|ui| {
+                    ui.label(format!("Velocity: {} m/s", vec2_formatted(self.vel)));
+                    if ui.button("Reset").clicked() {
+                        self.vel = Vec2::ZERO;
+                    }
+                });
+    
+                ui.horizontal(|ui| {
+                    ui.label(format!("Position: {} m", vec2_formatted(self.pos)));
+                    if ui.button("Reset").clicked() {
+                        self.pos = self.default_pos;
+                    }
+                });
+                if ui.button("Reset all").clicked() {
+                    *self = RigidBody::new(self.default_mass, self.default_pos, self.size);
                 }
+                ui.separator();
+    
+                ui.heading("Forces");
+                ui.label(format!(
+                    "F_res = {} = {} N",
+                    vec2_formatted(self.f_res),
+                    f32_formatted(self.f_res.length())
+                ));
+                ui.label(format!("Gravity: m * g = {} N", self.f_g));
+                ui.label(format!(
+                    "Air resistance: c * v*v = {} = {} N",
+                    vec2_formatted(self.f_air),
+                    f32_formatted(self.f_air.length())
+                ));
             });
-
-            ui.horizontal(|ui| {
-                ui.label(format!("Position: {} m", vec2_formatted(self.pos)));
-                if ui.button("Reset").clicked() {
-                    self.pos = self.default_pos;
-                }
-            });
-            if ui.button("Reset all").clicked() {
-                *self = RigidBody::new(self.default_mass, self.default_pos);
-            }
-            ui.separator();
-
-            ui.heading("Forces");
-            ui.label(format!(
-                "F_res = {} = {} N",
-                vec2_formatted(self.f_res),
-                f32_formatted(self.f_res.length())
-            ));
-            ui.label(format!("Gravity: m * g = {} N", self.f_g));
-            ui.label(format!(
-                "Air resistance: c * v*v = {} = {} N",
-                vec2_formatted(self.f_air),
-                f32_formatted(self.f_air.length())
-            ));
+           
         });
     }
 }

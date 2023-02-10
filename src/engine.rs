@@ -12,10 +12,12 @@ pub struct Engine {
 impl Engine {
     pub fn new() -> Self {
         let pos0 = Vec2::new(SCREEN_SIZE_METRES.x * 0.45, SCREEN_SIZE_METRES.y * 0.5);
+        let size0 = Vec2::new(2., 2.);
         let pos1 = Vec2::new(SCREEN_SIZE_METRES.x * 0.55, SCREEN_SIZE_METRES.y * 0.5);
+        let size1 = Vec2::new(2., 2.);
 
         Self {
-            rigid_bodies: vec![RigidBody::new(10., pos0), RigidBody::new(100., pos1)],
+            rigid_bodies: vec![RigidBody::new(10., pos0, size0), RigidBody::new(100., pos1, size1)],
             pause: false,
             g: 0.,
             c: 1.,
