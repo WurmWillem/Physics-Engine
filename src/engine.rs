@@ -11,8 +11,11 @@ pub struct Engine {
 }
 impl Engine {
     pub fn new() -> Self {
+        let pos0 = Vec2::new(SCREEN_SIZE_METRES.x * 0.45, SCREEN_SIZE_METRES.y * 0.5);
+        let pos1 = Vec2::new(SCREEN_SIZE_METRES.x * 0.55, SCREEN_SIZE_METRES.y * 0.5);
+
         Self {
-            rigid_bodies: vec![RigidBody::new(90.), RigidBody::new(0.1)],
+            rigid_bodies: vec![RigidBody::new(10., pos0), RigidBody::new(100., pos1)],
             pause: false,
             g: 0.,
             c: 1.,

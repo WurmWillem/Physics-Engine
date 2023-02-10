@@ -4,24 +4,28 @@ use macroquad::prelude::*;
 use crate::{METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
 
 pub struct RigidBody {
-    pub mass: f32,
-    pub pos: Vec2,
-    pub vel: Vec2,
-    pub size: Vec2,
-    pub f_res: Vec2,
-    pub f_g: f32,
-    pub f_air: Vec2,
+    mass: f32,
+    pos: Vec2,
+    vel: Vec2,
+    size: Vec2,
+    f_res: Vec2,
+    f_g: f32,
+    f_air: Vec2,
+    default_pos: Vec2,
+    default_mass: f32,
 }
 impl RigidBody {
-    pub fn new(mass: f32) -> Self {
+    pub fn new(mass: f32, pos: Vec2) -> Self {
         Self {
             mass,
-            pos: Vec2::new(SCREEN_SIZE_METRES.x * 0.5, SCREEN_SIZE_METRES.y * 0.5),
+            pos,
             vel: Vec2::ZERO,
             size: Vec2::new(2., 2.),
             f_res: Vec2::ZERO,
             f_g: 0.,
             f_air: Vec2::ZERO,
+            default_pos: pos,
+            default_mass: mass,
         }
     }
     pub fn apply_forces(&mut self, g: f32, c: f32) {
@@ -94,11 +98,11 @@ impl RigidBody {
             ui.horizontal(|ui| {
                 ui.label(format!("Position: {} m", vec2_formatted(self.pos)));
                 if ui.button("Reset").clicked() {
-                    self.pos = Vec2::new(SCREEN_SIZE_METRES.x * 0.5, SCREEN_SIZE_METRES.y * 0.5);
+                    self.pos = self.default_pos;
                 }
             });
             if ui.button("Reset all").clicked() {
-                *self = RigidBody::new(90.);
+                *self = RigidBody::new(self.default_mass, self.default_pos);
             }
             ui.separator();
 
