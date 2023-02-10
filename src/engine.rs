@@ -5,9 +5,10 @@ use crate::{rigid_body::RigidBody, METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_MET
 
 pub struct Engine {
     rigid_bodies: Vec<RigidBody>,
+    time_mult: f32,
+    pause: bool,
     g: f32,
     c: f32,
-    pause: bool,
 }
 impl Engine {
     pub fn new() -> Self {
@@ -17,7 +18,11 @@ impl Engine {
         let size1 = Vec2::new(2., 2.);
 
         Self {
-            rigid_bodies: vec![RigidBody::new(10., pos0, size0), RigidBody::new(100., pos1, size1)],
+            rigid_bodies: vec![
+                RigidBody::new(10., pos0, size0),
+                RigidBody::new(100., pos1, size1),
+            ],
+            time_mult: 1.,
             pause: false,
             g: 0.,
             c: 1.,
@@ -28,7 +33,7 @@ impl Engine {
         if !self.pause {
             for rb in &mut self.rigid_bodies {
                 if rb.enabled {
-                    rb.apply_forces(self.g, self.c);
+                    rb.apply_forces(self.g, self.c, self.time_mult);
                 }
             }
         }
@@ -49,6 +54,13 @@ impl Engine {
 
                 ui.heading("General");
                 ui.label(format!("FPS: {}", get_fps()));
+                ui.horizontal(|ui| {
+                    ui.label(format!("Time multiplier: "));
+                    ui.add(egui::Slider::new(&mut self.time_mult, (-2.)..=2.));
+                });
+                if ui.button("Reset to 1").clicked() {
+                    self.time_mult = 1.;
+                }
                 ui.label(format!("World size: {} m", SCREEN_SIZE_METRES));
                 ui.horizontal(|ui| {
                     if ui.button("Reset all").clicked() {

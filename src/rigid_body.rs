@@ -3,12 +3,13 @@ use macroquad::prelude::*;
 
 use crate::{METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
 
+#[derive(Debug, Clone, Copy)]
 pub struct RigidBody {
+    pub enabled: bool,
     mass: f32,
     pos: Vec2,
     vel: Vec2,
     size: Vec2,
-    pub enabled: bool,
     f_res: Vec2,
     f_g: f32,
     f_air: Vec2,
@@ -30,7 +31,7 @@ impl RigidBody {
             default_mass: mass,
         }
     }
-    pub fn apply_forces(&mut self, g: f32, c: f32) {
+    pub fn apply_forces(&mut self, g: f32, c: f32, time_mult: f32) {
         let delta_t = get_frame_time();
 
         let mut f_res = Vec2::ZERO;
@@ -47,7 +48,7 @@ impl RigidBody {
         let acc = f_res / self.mass;
 
         //v = u + a * dt
-        self.vel += acc * delta_t;
+        self.vel += acc * delta_t * time_mult;
 
         //p = p + v * dt
         let next_pos = self.pos + self.vel * delta_t;
@@ -80,7 +81,7 @@ impl RigidBody {
 
     pub fn update_ui(&mut self, egui_ctx: &Context, index: usize) {
         egui::Window::new(format!("Rigidbody {index}")).show(egui_ctx, |ui| {
-            ui.set_max_width(100.);
+            ui.set_max_width(200.);
             ui.checkbox(&mut self.enabled, "enabled");
 
             ui.collapsing("Show", |ui| {
@@ -90,7 +91,7 @@ impl RigidBody {
                     ui.add(egui::Slider::new(&mut self.mass, (0.1)..=300.));
                     ui.label("kg");
                 });
-    
+
                 ui.label(format!("Size: {} m", self.size));
                 ui.horizontal(|ui| {
                     ui.label(format!("Velocity: {} m/s", vec2_formatted(self.vel)));
@@ -98,7 +99,7 @@ impl RigidBody {
                         self.vel = Vec2::ZERO;
                     }
                 });
-    
+
                 ui.horizontal(|ui| {
                     ui.label(format!("Position: {} m", vec2_formatted(self.pos)));
                     if ui.button("Reset").clicked() {
@@ -109,7 +110,7 @@ impl RigidBody {
                     *self = RigidBody::new(self.default_mass, self.default_pos, self.size);
                 }
                 ui.separator();
-    
+
                 ui.heading("Forces");
                 ui.label(format!(
                     "F_res = {} = {} N",
@@ -117,13 +118,13 @@ impl RigidBody {
                     f32_formatted(self.f_res.length())
                 ));
                 ui.label(format!("Gravity: m * g = {} N", self.f_g));
+                ui.label("Air resistance: c * v*v =");
                 ui.label(format!(
-                    "Air resistance: c * v*v = {} = {} N",
+                    "{} = {} N",
                     vec2_formatted(self.f_air),
                     f32_formatted(self.f_air.length())
                 ));
             });
-           
         });
     }
 }
