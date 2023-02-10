@@ -4,34 +4,45 @@ use macroquad::prelude::*;
 use crate::{rigid_body::RigidBody, METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
 
 pub struct Engine {
-    rb: RigidBody,
+    rigid_bodies: Vec<RigidBody>,
     g: f32,
-    k: f32,
+    c: f32,
     pause: bool,
 }
 impl Engine {
     pub fn new() -> Self {
+        let pos0 = Vec2::new(SCREEN_SIZE_METRES.x * 0.45, SCREEN_SIZE_METRES.y * 0.5);
+        let size0 = Vec2::new(2., 2.);
+        let pos1 = Vec2::new(SCREEN_SIZE_METRES.x * 0.55, SCREEN_SIZE_METRES.y * 0.5);
+        let size1 = Vec2::new(2., 2.);
+
         Self {
-            rb: RigidBody::new(90.),
+            rigid_bodies: vec![RigidBody::new(10., pos0, size0), RigidBody::new(100., pos1, size1)],
             pause: false,
             g: 0.,
-            k: 1.,
+            c: 1.,
         }
     }
     pub fn update(&mut self) {
         self.update_ui();
         if !self.pause {
-            self.rb.apply_forces(self.g, self.k);
+            for rb in &mut self.rigid_bodies {
+                rb.apply_forces(self.g, self.c);
+            }
         }
     }
     pub fn draw(&self) {
         draw_background();
-        self.rb.draw();
+        for rb in &self.rigid_bodies {
+            rb.draw();
+        }
     }
 
     fn update_ui(&mut self) {
         egui_macroquad::ui(|egui_ctx| {
             egui::Window::new("Physics Engine").show(egui_ctx, |ui| {
+                ui.set_max_width(190.);
+
                 ui.heading("General");
                 ui.label(format!("FPS: {}", get_fps()));
                 ui.label(format!("World size: {} m", SCREEN_SIZE_METRES));
@@ -43,15 +54,14 @@ impl Engine {
                         self.pause = !self.pause;
                     }
                 });
-
                 ui.separator();
 
-                ui.heading("Forces");
-                ui.label(format!("F_res = {}", vec2_formatted(self.rb.f_res)));
-                ui.label(format!("Gravity: m * g = {} N", self.rb.f_g));
+                ui.heading("Variables");
                 ui.horizontal(|ui| {
                     ui.label("g:");
                     ui.add(egui::Slider::new(&mut self.g, (-30.)..=30.));
+                });
+                ui.horizontal(|ui| {
                     if ui.button("Reset to default").clicked() {
                         self.g = 9.81;
                     }
@@ -59,23 +69,25 @@ impl Engine {
                         self.g = 0.;
                     }
                 });
+                ui.separator();
 
-                ui.label(format!(
-                    "Air resistance: k * v*v = {}",
-                    vec2_formatted(self.rb.f_air)
-                ));
                 ui.horizontal(|ui| {
-                    ui.label("k:");
-                    ui.add(egui::Slider::new(&mut self.k, (-1.)..=30.));
+                    ui.label("c:");
+                    ui.add(egui::Slider::new(&mut self.c, (-1.)..=30.));
+                });
+                ui.horizontal(|ui| {
                     if ui.button("Reset to default").clicked() {
-                        self.k = 1.;
+                        self.c = 1.;
                     }
                     if ui.button("Reset to 0").clicked() {
-                        self.k = 0.;
+                        self.c = 0.;
                     }
                 });
             });
-            self.rb.update_ui(egui_ctx);
+
+            for i in 0..self.rigid_bodies.len() {
+                self.rigid_bodies[i].update_ui(egui_ctx, i + 1);
+            }
         });
     }
 }
@@ -87,7 +99,7 @@ fn draw_background() {
             0.,
             x as f32 * METRE_IN_PIXELS.x,
             SCREEN_SIZE.y,
-            0.7,
+            0.5,
             BLACK,
         )
     }
@@ -97,7 +109,7 @@ fn draw_background() {
             SCREEN_SIZE.y - y as f32 * METRE_IN_PIXELS.y,
             SCREEN_SIZE.x,
             SCREEN_SIZE.y - y as f32 * METRE_IN_PIXELS.y,
-            0.7,
+            0.5,
             BLACK,
         )
     }
@@ -109,11 +121,4 @@ fn draw_background() {
         METRE_IN_PIXELS.y * 2.,
         BROWN,
     )
-}
-
-pub fn vec2_formatted(vec: Vec2) -> Vec2 {
-    let v = vec * 100.;
-    let x = v.x as i32 as f32 / 100.;
-    let y = v.y as i32 as f32 / 100.;
-    Vec2::new(x, y)
 }
