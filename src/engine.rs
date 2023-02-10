@@ -4,29 +4,33 @@ use macroquad::prelude::*;
 use crate::{rigid_body::RigidBody, METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
 
 pub struct Engine {
-    rb: RigidBody,
+    rigid_bodies: Vec<RigidBody>,
     g: f32,
-    k: f32,
+    c: f32,
     pause: bool,
 }
 impl Engine {
     pub fn new() -> Self {
         Self {
-            rb: RigidBody::new(90.),
+            rigid_bodies: vec![RigidBody::new(90.), RigidBody::new(0.1)],
             pause: false,
             g: 0.,
-            k: 1.,
+            c: 1.,
         }
     }
     pub fn update(&mut self) {
         self.update_ui();
         if !self.pause {
-            self.rb.apply_forces(self.g, self.k);
+            for rb in &mut self.rigid_bodies {
+                rb.apply_forces(self.g, self.c);
+            }
         }
     }
     pub fn draw(&self) {
         draw_background();
-        self.rb.draw();
+        for rb in &self.rigid_bodies {
+            rb.draw();
+        }
     }
 
     fn update_ui(&mut self) {
@@ -58,17 +62,20 @@ impl Engine {
                 });
 
                 ui.horizontal(|ui| {
-                    ui.label("k:");
-                    ui.add(egui::Slider::new(&mut self.k, (-1.)..=30.));
+                    ui.label("c:");
+                    ui.add(egui::Slider::new(&mut self.c, (-1.)..=30.));
                     if ui.button("Reset to default").clicked() {
-                        self.k = 1.;
+                        self.c = 1.;
                     }
                     if ui.button("Reset to 0").clicked() {
-                        self.k = 0.;
+                        self.c = 0.;
                     }
                 });
             });
-            self.rb.update_ui(egui_ctx);
+            
+            for i in 0..self.rigid_bodies.len() {
+                self.rigid_bodies[i].update_ui(egui_ctx, i + 1);
+            }
         });
     }
 }

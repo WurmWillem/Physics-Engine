@@ -24,7 +24,7 @@ impl RigidBody {
             f_air: Vec2::ZERO,
         }
     }
-    pub fn apply_forces(&mut self, g: f32, k: f32) {
+    pub fn apply_forces(&mut self, g: f32, c: f32) {
         let delta_t = get_frame_time();
 
         let mut f_res = Vec2::ZERO;
@@ -34,7 +34,7 @@ impl RigidBody {
         f_res.y -= f_g;
 
         //F_Air = 0.5 * p * A * v*v = k * v*v in our case because k = 0.5 * p * A
-        let f_air = k * self.vel * self.vel.abs();
+        let f_air = c * self.vel * self.vel.abs();
         f_res -= f_air;
 
         //a = f / m
@@ -72,8 +72,8 @@ impl RigidBody {
         );
     }
 
-    pub fn update_ui(&mut self, egui_ctx: &Context) {
-        egui::Window::new("Rigidbody").show(egui_ctx, |ui| {
+    pub fn update_ui(&mut self, egui_ctx: &Context, index: usize) {
+        egui::Window::new(format!("Rigidbody {index}")).show(egui_ctx, |ui| {
             ui.heading("Data");
             ui.horizontal(|ui| {
                 ui.label("Mass:");
@@ -101,10 +101,14 @@ impl RigidBody {
             ui.separator();
 
             ui.heading("Forces");
-            ui.label(format!("F_res = {}", vec2_formatted(self.f_res)));
+            ui.label(format!(
+                "F_res = {} = {} N",
+                vec2_formatted(self.f_res),
+                f32_formatted(self.f_res.length())
+            ));
             ui.label(format!("Gravity: m * g = {} N", self.f_g));
             ui.label(format!(
-                "Air resistance: k * v*v = {} = {} N",
+                "Air resistance: c * v*v = {} = {} N",
                 vec2_formatted(self.f_air),
                 f32_formatted(self.f_air.length())
             ));
