@@ -117,7 +117,7 @@ impl RigidBody {
                     vec2_formatted(self.f_res),
                     f32_formatted(self.f_res.length())
                 ));
-                ui.label(format!("Gravity: m * g = {} N", self.f_g));
+                ui.label(format!("Gravity: m * g = {} N", f32_formatted(self.f_g)));
                 ui.label("Air resistance: c * v*v =");
                 ui.label(format!(
                     "{} = {} N",

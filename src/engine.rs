@@ -55,7 +55,7 @@ impl Engine {
                 ui.heading("General");
                 ui.label(format!("FPS: {}", get_fps()));
                 ui.horizontal(|ui| {
-                    ui.label(format!("Time multiplier: "));
+                    ui.label(format!("Time multiplier: ")).on_hover_text("This gets multiplied by the velocity, so two times speed gives two times velocity");
                     ui.add(egui::Slider::new(&mut self.time_mult, (-2.)..=2.));
                 });
                 if ui.button("Reset to 1").clicked() {
@@ -70,11 +70,12 @@ impl Engine {
                 });
                 ui.separator();
 
-                ui.heading("Variables");
+                ui.heading("Variables").on_hover_text("Variables used in equations to deduce the forces applied to each rigidbody");
                 ui.horizontal(|ui| {
-                    ui.label("g:");
+                    ui.label("g:").on_hover_text("Acceleration due to gravity");
                     ui.add(egui::Slider::new(&mut self.g, (-30.)..=30.));
                 });
+              
                 ui.horizontal(|ui| {
                     if ui.button("Reset to default").clicked() {
                         self.g = 9.81;
@@ -86,7 +87,7 @@ impl Engine {
                 ui.separator();
 
                 ui.horizontal(|ui| {
-                    ui.label("c:");
+                    ui.label("c:").on_hover_text("Multiplier for the air resistance");
                     ui.add(egui::Slider::new(&mut self.c, (-1.)..=30.));
                 });
                 ui.horizontal(|ui| {
