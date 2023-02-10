@@ -8,6 +8,7 @@ pub struct RigidBody {
     pos: Vec2,
     vel: Vec2,
     size: Vec2,
+    pub enabled: bool,
     f_res: Vec2,
     f_g: f32,
     f_air: Vec2,
@@ -21,6 +22,7 @@ impl RigidBody {
             pos,
             vel: Vec2::ZERO,
             size,
+            enabled: true,
             f_res: Vec2::ZERO,
             f_g: 0.,
             f_air: Vec2::ZERO,
@@ -78,9 +80,10 @@ impl RigidBody {
 
     pub fn update_ui(&mut self, egui_ctx: &Context, index: usize) {
         egui::Window::new(format!("Rigidbody {index}")).show(egui_ctx, |ui| {
-            ui.collapsing("Show", |ui| {
-                ui.set_max_width(100.);
+            ui.set_max_width(100.);
+            ui.checkbox(&mut self.enabled, "enabled");
 
+            ui.collapsing("Show", |ui| {
                 ui.heading("Data");
                 ui.horizontal(|ui| {
                     ui.label("Mass:");

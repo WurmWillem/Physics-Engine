@@ -27,14 +27,18 @@ impl Engine {
         self.update_ui();
         if !self.pause {
             for rb in &mut self.rigid_bodies {
-                rb.apply_forces(self.g, self.c);
+                if rb.enabled {
+                    rb.apply_forces(self.g, self.c);
+                }
             }
         }
     }
     pub fn draw(&self) {
         draw_background();
         for rb in &self.rigid_bodies {
-            rb.draw();
+            if rb.enabled {
+                rb.draw();
+            }
         }
     }
 
@@ -50,9 +54,7 @@ impl Engine {
                     if ui.button("Reset all").clicked() {
                         *self = Engine::new();
                     }
-                    if ui.button("Pause").clicked() {
-                        self.pause = !self.pause;
-                    }
+                    ui.checkbox(&mut self.pause, "pause");
                 });
                 ui.separator();
 
