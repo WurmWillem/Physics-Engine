@@ -74,6 +74,8 @@ impl RigidBody {
 
     pub fn update_ui(&mut self, egui_ctx: &Context, index: usize) {
         egui::Window::new(format!("Rigidbody {index}")).show(egui_ctx, |ui| {
+            ui.set_max_width(100.);
+
             ui.heading("Data");
             ui.horizontal(|ui| {
                 ui.label("Mass:");

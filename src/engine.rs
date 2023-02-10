@@ -36,6 +36,8 @@ impl Engine {
     fn update_ui(&mut self) {
         egui_macroquad::ui(|egui_ctx| {
             egui::Window::new("Physics Engine").show(egui_ctx, |ui| {
+                ui.set_max_width(190.);
+
                 ui.heading("General");
                 ui.label(format!("FPS: {}", get_fps()));
                 ui.label(format!("World size: {} m", SCREEN_SIZE_METRES));
@@ -53,6 +55,8 @@ impl Engine {
                 ui.horizontal(|ui| {
                     ui.label("g:");
                     ui.add(egui::Slider::new(&mut self.g, (-30.)..=30.));
+                });
+                ui.horizontal(|ui| {
                     if ui.button("Reset to default").clicked() {
                         self.g = 9.81;
                     }
@@ -60,10 +64,13 @@ impl Engine {
                         self.g = 0.;
                     }
                 });
+                ui.separator();
 
                 ui.horizontal(|ui| {
                     ui.label("c:");
                     ui.add(egui::Slider::new(&mut self.c, (-1.)..=30.));
+                });
+                ui.horizontal(|ui| {
                     if ui.button("Reset to default").clicked() {
                         self.c = 1.;
                     }
@@ -72,7 +79,7 @@ impl Engine {
                     }
                 });
             });
-            
+
             for i in 0..self.rigid_bodies.len() {
                 self.rigid_bodies[i].update_ui(egui_ctx, i + 1);
             }
