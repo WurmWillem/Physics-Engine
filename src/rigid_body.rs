@@ -3,6 +3,8 @@ use macroquad::prelude::*;
 
 use crate::{METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
 
+const DIGITS_AFTER_DECIMAL: usize = 0;
+
 #[derive(Debug, Clone, Copy)]
 pub struct RigidBody {
     pub enabled: bool,
@@ -33,7 +35,7 @@ impl RigidBody {
     }
     pub fn apply_forces(&mut self, g: f32, c: f32, time_mult: f32) {
         let delta_t = get_frame_time();
-
+        
         let mut f_res = Vec2::ZERO;
 
         //Fz = m * g
@@ -94,14 +96,14 @@ impl RigidBody {
 
                 ui.label(format!("Size: {} m", self.size));
                 ui.horizontal(|ui| {
-                    ui.label(format!("Velocity: {} m/s", vec2_formatted(self.vel)));
+                    ui.label(format!("Velocity: {} m/s", self.vel.format()));
                     if ui.button("Reset").clicked() {
                         self.vel = Vec2::ZERO;
                     }
                 });
 
                 ui.horizontal(|ui| {
-                    ui.label(format!("Position: {} m", vec2_formatted(self.pos)));
+                    ui.label(format!("Position: {} m", self.pos.format()));
                     if ui.button("Reset").clicked() {
                         self.pos = self.default_pos;
                     }
@@ -111,33 +113,37 @@ impl RigidBody {
                 }
                 ui.separator();
 
-                ui.heading("Forces");
+                ui.heading("Forces").on_hover_text("Forces that get applied to the rigidbody");
                 ui.label(format!(
                     "F_res = {} = {} N",
-                    vec2_formatted(self.f_res),
-                    f32_formatted(self.f_res.length())
+                    self.f_res.format(),
+                    self.f_res.length().format()
                 ));
-                ui.label(format!("Gravity: m * g = {} N", f32_formatted(self.f_g)));
+                ui.label(format!("Gravity: m * g = {} N", self.f_g.format()));
                 ui.label("Air resistance: c * v*v =");
                 ui.label(format!(
                     "{} = {} N",
-                    vec2_formatted(self.f_air),
-                    f32_formatted(self.f_air.length())
+                    self.f_air.format(),
+                    self.f_air.length().format()
                 ));
             });
         });
     }
 }
 
-fn vec2_formatted(vec: Vec2) -> Vec2 {
-    let v = vec * 100.;
-    let x = v.x as i32 as f32 / 100.;
-    let y = v.y as i32 as f32 / 100.;
-    Vec2::new(x, y)
+impl Format for f32 {
+    fn format(&self) -> Self {
+        let f = *self * (DIGITS_AFTER_DECIMAL + 1) as f32;
+        let f = f as i32 as f32;
+        f / (DIGITS_AFTER_DECIMAL + 1) as f32
+    }
+}
+impl Format for Vec2 {
+    fn format(&self) -> Self { 
+        Vec2::new(self.x.format(), self.y.format())
+    }
 }
 
-fn f32_formatted(f: f32) -> f32 {
-    let f = f * 100.;
-    let f = f as i32 as f32;
-    f / 100.
+pub trait Format {
+    fn format(&self) -> Self;
 }
