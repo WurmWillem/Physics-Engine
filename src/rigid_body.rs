@@ -34,23 +34,23 @@ impl RigidBody {
         }
     }
     pub fn apply_forces(&mut self, g: f32, c: f32, time_mult: f32) {
-        let delta_t = get_frame_time();
-        
+        let delta_t = get_frame_time() * time_mult;
+
         let mut f_res = Vec2::ZERO;
 
         //Fz = m * g
         let f_g = g * self.mass;
         f_res.y -= f_g;
 
-        //F_Air = 0.5 * p * A * v*v = k * v*v in our case because k = 0.5 * p * A
-        let f_air = c * self.vel * self.vel.abs();
+        //F_Air = 0.5 * p * A * v*v = c * A * v*v in our case because k = 0.5 * p
+        let f_air = c * self.size.x * self.vel * self.vel.abs();
         f_res -= f_air;
 
         //a = f / m
         let acc = f_res / self.mass;
 
         //v = u + a * dt
-        self.vel += acc * delta_t * time_mult;
+        self.vel += acc * delta_t;
 
         //p = p + v * dt
         let next_pos = self.pos + self.vel * delta_t;
@@ -113,14 +113,15 @@ impl RigidBody {
                 }
                 ui.separator();
 
-                ui.heading("Forces").on_hover_text("Forces that get applied to the rigidbody");
+                ui.heading("Forces")
+                    .on_hover_text("Forces that get applied to the rigidbody");
                 ui.label(format!(
                     "F_res = {} = {} N",
                     self.f_res.format(),
                     self.f_res.length().format()
                 ));
                 ui.label(format!("Gravity: m * g = {} N", self.f_g.format()));
-                ui.label("Air resistance: c * v*v =");
+                ui.label("Air resistance: c * A * v*v =");
                 ui.label(format!(
                     "{} = {} N",
                     self.f_air.format(),
@@ -131,6 +132,9 @@ impl RigidBody {
     }
 }
 
+trait Format {
+    fn format(&self) -> Self;
+}
 impl Format for f32 {
     fn format(&self) -> Self {
         let f = *self * (DIGITS_AFTER_DECIMAL + 1) as f32;
@@ -139,11 +143,7 @@ impl Format for f32 {
     }
 }
 impl Format for Vec2 {
-    fn format(&self) -> Self { 
+    fn format(&self) -> Self {
         Vec2::new(self.x.format(), self.y.format())
     }
-}
-
-pub trait Format {
-    fn format(&self) -> Self;
 }

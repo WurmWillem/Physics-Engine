@@ -55,8 +55,8 @@ impl Engine {
                 ui.heading("General");
                 ui.label(format!("FPS: {}", get_fps()));
                 ui.horizontal(|ui| {
-                    ui.label(format!("Time multiplier: ")).on_hover_text("This gets multiplied by the velocity, so two times speed gives two times velocity");
-                    ui.add(egui::Slider::new(&mut self.time_mult, (-2.)..=2.));
+                    ui.label(format!("Time multiplier: ")).on_hover_text("delta time gets multiplied by this");
+                    ui.add(egui::Slider::new(&mut self.time_mult, (0.)..=2.));
                 });
                 if ui.button("Reset to 1").clicked() {
                     self.time_mult = 1.;
