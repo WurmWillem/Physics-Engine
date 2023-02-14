@@ -1,0 +1,9 @@
+let mut pos = convert_local_to_metres(mouse_position_local());
+            pos.y = SCREEN_SIZE_METRES.y - pos.y;
+
+            let rb = RigidBody::new(20., pos, vec2(3., 3.));
+            self.rigid_bodies.push(rb);
+
+fn convert_local_to_metres(v: Vec2) -> Vec2 {
+    (v + Vec2::ONE) * vec2(0.5, 0.5) * SCREEN_SIZE_METRES
+}

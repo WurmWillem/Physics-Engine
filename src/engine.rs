@@ -5,9 +5,10 @@ use crate::{rigid_body::RigidBody, METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_MET
 
 pub struct Engine {
     rigid_bodies: Vec<RigidBody>,
+    time_mult: f32,
+    pause: bool,
     g: f32,
     c: f32,
-    pause: bool,
 }
 impl Engine {
     pub fn new() -> Self {
@@ -17,7 +18,11 @@ impl Engine {
         let size1 = Vec2::new(2., 2.);
 
         Self {
-            rigid_bodies: vec![RigidBody::new(10., pos0, size0), RigidBody::new(100., pos1, size1)],
+            rigid_bodies: vec![
+                RigidBody::new(10., pos0, size0),
+                RigidBody::new(100., pos1, size1),
+            ],
+            time_mult: 1.,
             pause: false,
             g: 0.,
             c: 1.,
@@ -27,14 +32,18 @@ impl Engine {
         self.update_ui();
         if !self.pause {
             for rb in &mut self.rigid_bodies {
-                rb.apply_forces(self.g, self.c);
+                if rb.enabled {
+                    rb.apply_forces(self.g, self.c, self.time_mult);
+                }
             }
         }
     }
     pub fn draw(&self) {
         draw_background();
         for rb in &self.rigid_bodies {
-            rb.draw();
+            if rb.enabled {
+                rb.draw();
+            }
         }
     }
 
@@ -45,22 +54,28 @@ impl Engine {
 
                 ui.heading("General");
                 ui.label(format!("FPS: {}", get_fps()));
+                ui.horizontal(|ui| {
+                    ui.label(format!("Time multiplier: ")).on_hover_text("delta time gets multiplied by this");
+                    ui.add(egui::Slider::new(&mut self.time_mult, (0.)..=2.));
+                });
+                if ui.button("Reset to 1").clicked() {
+                    self.time_mult = 1.;
+                }
                 ui.label(format!("World size: {} m", SCREEN_SIZE_METRES));
                 ui.horizontal(|ui| {
                     if ui.button("Reset all").clicked() {
                         *self = Engine::new();
                     }
-                    if ui.button("Pause").clicked() {
-                        self.pause = !self.pause;
-                    }
+                    ui.checkbox(&mut self.pause, "pause");
                 });
                 ui.separator();
 
-                ui.heading("Variables");
+                ui.heading("Variables").on_hover_text("Variables used in equations to deduce the forces applied to each rigidbody");
                 ui.horizontal(|ui| {
-                    ui.label("g:");
+                    ui.label("g:").on_hover_text("Acceleration due to gravity");
                     ui.add(egui::Slider::new(&mut self.g, (-30.)..=30.));
                 });
+              
                 ui.horizontal(|ui| {
                     if ui.button("Reset to default").clicked() {
                         self.g = 9.81;
@@ -72,7 +87,7 @@ impl Engine {
                 ui.separator();
 
                 ui.horizontal(|ui| {
-                    ui.label("c:");
+                    ui.label("c:").on_hover_text("Multiplier for the air resistance");
                     ui.add(egui::Slider::new(&mut self.c, (-1.)..=30.));
                 });
                 ui.horizontal(|ui| {

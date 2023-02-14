@@ -3,7 +3,11 @@ use macroquad::prelude::*;
 
 use crate::{METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
 
+const DIGITS_AFTER_DECIMAL: usize = 0;
+
+#[derive(Debug, Clone, Copy)]
 pub struct RigidBody {
+    pub enabled: bool,
     mass: f32,
     pos: Vec2,
     vel: Vec2,
@@ -21,6 +25,7 @@ impl RigidBody {
             pos,
             vel: Vec2::ZERO,
             size,
+            enabled: true,
             f_res: Vec2::ZERO,
             f_g: 0.,
             f_air: Vec2::ZERO,
@@ -28,8 +33,8 @@ impl RigidBody {
             default_mass: mass,
         }
     }
-    pub fn apply_forces(&mut self, g: f32, c: f32) {
-        let delta_t = get_frame_time();
+    pub fn apply_forces(&mut self, g: f32, c: f32, time_mult: f32) {
+        let delta_t = get_frame_time() * time_mult;
 
         let mut f_res = Vec2::ZERO;
 
@@ -37,8 +42,8 @@ impl RigidBody {
         let f_g = g * self.mass;
         f_res.y -= f_g;
 
-        //F_Air = 0.5 * p * A * v*v = k * v*v in our case because k = 0.5 * p * A
-        let f_air = c * self.vel * self.vel.abs();
+        //F_Air = 0.5 * p * A * v*v = c * A * v*v in our case because k = 0.5 * p
+        let f_air = c * self.size.x * self.vel * self.vel.abs();
         f_res -= f_air;
 
         //a = f / m
@@ -78,26 +83,27 @@ impl RigidBody {
 
     pub fn update_ui(&mut self, egui_ctx: &Context, index: usize) {
         egui::Window::new(format!("Rigidbody {index}")).show(egui_ctx, |ui| {
-            ui.collapsing("Show", |ui| {
-                ui.set_max_width(100.);
+            ui.set_max_width(200.);
+            ui.checkbox(&mut self.enabled, "enabled");
 
+            ui.collapsing("Show", |ui| {
                 ui.heading("Data");
                 ui.horizontal(|ui| {
                     ui.label("Mass:");
                     ui.add(egui::Slider::new(&mut self.mass, (0.1)..=300.));
                     ui.label("kg");
                 });
-    
+
                 ui.label(format!("Size: {} m", self.size));
                 ui.horizontal(|ui| {
-                    ui.label(format!("Velocity: {} m/s", vec2_formatted(self.vel)));
+                    ui.label(format!("Velocity: {} m/s", self.vel.format()));
                     if ui.button("Reset").clicked() {
                         self.vel = Vec2::ZERO;
                     }
                 });
-    
+
                 ui.horizontal(|ui| {
-                    ui.label(format!("Position: {} m", vec2_formatted(self.pos)));
+                    ui.label(format!("Position: {} m", self.pos.format()));
                     if ui.button("Reset").clicked() {
                         self.pos = self.default_pos;
                     }
@@ -106,34 +112,38 @@ impl RigidBody {
                     *self = RigidBody::new(self.default_mass, self.default_pos, self.size);
                 }
                 ui.separator();
-    
-                ui.heading("Forces");
+
+                ui.heading("Forces")
+                    .on_hover_text("Forces that get applied to the rigidbody");
                 ui.label(format!(
                     "F_res = {} = {} N",
-                    vec2_formatted(self.f_res),
-                    f32_formatted(self.f_res.length())
+                    self.f_res.format(),
+                    self.f_res.length().format()
                 ));
-                ui.label(format!("Gravity: m * g = {} N", self.f_g));
+                ui.label(format!("Gravity: m * g = {} N", self.f_g.format()));
+                ui.label("Air resistance: c * A * v*v =");
                 ui.label(format!(
-                    "Air resistance: c * v*v = {} = {} N",
-                    vec2_formatted(self.f_air),
-                    f32_formatted(self.f_air.length())
+                    "{} = {} N",
+                    self.f_air.format(),
+                    self.f_air.length().format()
                 ));
             });
-           
         });
     }
 }
 
-fn vec2_formatted(vec: Vec2) -> Vec2 {
-    let v = vec * 100.;
-    let x = v.x as i32 as f32 / 100.;
-    let y = v.y as i32 as f32 / 100.;
-    Vec2::new(x, y)
+trait Format {
+    fn format(&self) -> Self;
 }
-
-fn f32_formatted(f: f32) -> f32 {
-    let f = f * 100.;
-    let f = f as i32 as f32;
-    f / 100.
+impl Format for f32 {
+    fn format(&self) -> Self {
+        let f = *self * (DIGITS_AFTER_DECIMAL + 1) as f32;
+        let f = f as i32 as f32;
+        f / (DIGITS_AFTER_DECIMAL + 1) as f32
+    }
+}
+impl Format for Vec2 {
+    fn format(&self) -> Self {
+        Vec2::new(self.x.format(), self.y.format())
+    }
 }
