@@ -138,7 +138,7 @@ trait Format {
 impl Format for f32 {
     fn format(&self) -> Self {
         let f = *self * (DIGITS_AFTER_DECIMAL + 1) as f32;
-        let f = f as i32 as f32;
+        let f = f.round();
         f / (DIGITS_AFTER_DECIMAL + 1) as f32
     }
 }
