@@ -31,20 +31,20 @@ impl Engine {
     pub fn update(&mut self) {
         self.update_ui();
         if !self.pause {
-            for rb in &mut self.rigid_bodies {
+            self.rigid_bodies.iter_mut().for_each(|rb| {
                 if rb.enabled {
                     rb.apply_forces(self.g, self.c, self.time_mult);
                 }
-            }
+            });
         }
     }
     pub fn draw(&self) {
         draw_background();
-        for rb in &self.rigid_bodies {
+        self.rigid_bodies.iter().for_each(|rb| {
             if rb.enabled {
                 rb.draw();
             }
-        }
+        });
     }
 
     fn update_ui(&mut self) {
@@ -55,7 +55,8 @@ impl Engine {
                 ui.heading("General");
                 ui.label(format!("FPS: {}", get_fps()));
                 ui.horizontal(|ui| {
-                    ui.label(format!("Time multiplier: ")).on_hover_text("delta time gets multiplied by this");
+                    ui.label(format!("Time multiplier: "))
+                        .on_hover_text("delta time gets multiplied by this");
                     ui.add(egui::Slider::new(&mut self.time_mult, (0.)..=2.));
                 });
                 if ui.button("Reset to 1").clicked() {
@@ -70,12 +71,14 @@ impl Engine {
                 });
                 ui.separator();
 
-                ui.heading("Variables").on_hover_text("Variables used in equations to deduce the forces applied to each rigidbody");
+                ui.heading("Variables").on_hover_text(
+                    "Variables used in equations to deduce the forces applied to each rigidbody",
+                );
                 ui.horizontal(|ui| {
                     ui.label("g:").on_hover_text("Acceleration due to gravity");
                     ui.add(egui::Slider::new(&mut self.g, (-30.)..=30.));
                 });
-              
+
                 ui.horizontal(|ui| {
                     if ui.button("Reset to default").clicked() {
                         self.g = 9.81;
@@ -87,7 +90,8 @@ impl Engine {
                 ui.separator();
 
                 ui.horizontal(|ui| {
-                    ui.label("c:").on_hover_text("Multiplier for the air resistance");
+                    ui.label("c:")
+                        .on_hover_text("Multiplier for the air resistance");
                     ui.add(egui::Slider::new(&mut self.c, (-1.)..=30.));
                 });
                 ui.horizontal(|ui| {

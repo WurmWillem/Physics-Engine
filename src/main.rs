@@ -17,7 +17,7 @@ async fn main() {
     request_new_screen_size(SCREEN_SIZE.x, SCREEN_SIZE.y);
 
     let mut engine = Engine::new();
-
+   
     loop {
         clear_background(LIGHTGRAY);
 

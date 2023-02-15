@@ -1,4 +1,4 @@
-use egui_macroquad::egui::{self, Context};
+use egui_macroquad::egui::{self, Context, Ui};
 use macroquad::prelude::*;
 
 use crate::{METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
@@ -68,7 +68,7 @@ impl RigidBody {
         }
         self.f_res = f_res;
         self.f_g = f_g;
-        self.f_air = f_air
+        self.f_air = f_air;
     }
 
     pub fn draw(&self) {
@@ -144,6 +144,6 @@ impl Format for f32 {
 }
 impl Format for Vec2 {
     fn format(&self) -> Self {
-        Vec2::new(self.x.format(), self.y.format())
+        vec2(self.x.format(), self.y.format())
     }
 }
