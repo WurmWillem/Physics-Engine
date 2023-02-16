@@ -1,12 +1,12 @@
-use egui_macroquad::egui::{self, Context, Ui};
+use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
-use crate::{METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
+use crate::{METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES, engine::RigidBody};
 
 const DIGITS_AFTER_DECIMAL: usize = 0;
 
 #[derive(Debug, Clone, Copy)]
-pub struct RigidBody {
+pub struct RigidSquare {
     pub enabled: bool,
     mass: f32,
     pos: Vec2,
@@ -18,22 +18,8 @@ pub struct RigidBody {
     default_pos: Vec2,
     default_mass: f32,
 }
-impl RigidBody {
-    pub fn new(mass: f32, pos: Vec2, size: Vec2) -> Self {
-        Self {
-            mass,
-            pos,
-            vel: Vec2::ZERO,
-            size,
-            enabled: true,
-            f_res: Vec2::ZERO,
-            f_g: 0.,
-            f_air: Vec2::ZERO,
-            default_pos: pos,
-            default_mass: mass,
-        }
-    }
-    pub fn apply_forces(&mut self, g: f32, c: f32, time_mult: f32) {
+impl RigidBody for RigidSquare {
+    fn apply_forces(&mut self, g: f32, c: f32, time_mult: f32) {
         let delta_t = get_frame_time() * time_mult;
 
         let mut f_res = Vec2::ZERO;
@@ -71,7 +57,7 @@ impl RigidBody {
         self.f_air = f_air;
     }
 
-    pub fn draw(&self) {
+    fn draw(&self) {
         draw_rectangle(
             self.pos.x * METRE_IN_PIXELS.x,
             SCREEN_SIZE.y - self.pos.y * METRE_IN_PIXELS.y,
@@ -81,7 +67,7 @@ impl RigidBody {
         );
     }
 
-    pub fn update_ui(&mut self, egui_ctx: &Context, index: usize) {
+    fn update_ui(&mut self, egui_ctx: &Context, index: usize) {
         egui::Window::new(format!("Rigidbody {index}")).show(egui_ctx, |ui| {
             ui.set_max_width(200.);
             ui.checkbox(&mut self.enabled, "enabled");
@@ -109,7 +95,7 @@ impl RigidBody {
                     }
                 });
                 if ui.button("Reset all").clicked() {
-                    *self = RigidBody::new(self.default_mass, self.default_pos, self.size);
+                    *self = RigidSquare::new(self.default_mass, self.default_pos, self.size);
                 }
                 ui.separator();
 
@@ -130,6 +116,27 @@ impl RigidBody {
             });
         });
     }
+
+    fn get_enabled(&self) -> bool {
+        self.enabled
+    }
+}
+impl RigidSquare {
+    pub fn new(mass: f32, pos: Vec2, size: Vec2) -> Self {
+        Self {
+            mass,
+            pos,
+            vel: Vec2::ZERO,
+            size,
+            enabled: true,
+            f_res: Vec2::ZERO,
+            f_g: 0.,
+            f_air: Vec2::ZERO,
+            default_pos: pos,
+            default_mass: mass,
+        }
+    }
+    
 }
 
 trait Format {

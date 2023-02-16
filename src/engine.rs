@@ -1,10 +1,10 @@
-use egui_macroquad::egui;
+use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
-use crate::{rigid_body::RigidBody, METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
+use crate::{rigid_square::RigidSquare, METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
 
 pub struct Engine {
-    rigid_bodies: Vec<RigidBody>,
+    rigid_bodies: Vec<Box<dyn RigidBody>>,
     time_mult: f32,
     pause: bool,
     g: f32,
@@ -17,10 +17,13 @@ impl Engine {
         let pos1 = vec2(SCREEN_SIZE_METRES.x * 0.55, SCREEN_SIZE_METRES.y * 0.5);
         let size1 = vec2(2., 2.);
 
+        let rs0 = RigidSquare::new(10., pos0, size0);
+        let rs1 = RigidSquare::new(100., pos1, size1);
+
         Self {
             rigid_bodies: vec![
-                RigidBody::new(10., pos0, size0),
-                RigidBody::new(100., pos1, size1),
+                Box::new(rs0),
+                Box::new(rs1),
             ],
             time_mult: 1.,
             pause: false,
@@ -32,7 +35,7 @@ impl Engine {
         self.update_ui();
         if !self.pause {
             self.rigid_bodies.iter_mut().for_each(|rb| {
-                if rb.enabled {
+                if rb.get_enabled() {
                     rb.apply_forces(self.g, self.c, self.time_mult);
                 }
             });
@@ -41,7 +44,7 @@ impl Engine {
     pub fn draw(&self) {
         draw_background();
         self.rigid_bodies.iter().for_each(|rb| {
-            if rb.enabled {
+            if rb.get_enabled() {
                 rb.draw();
             }
         });
@@ -109,6 +112,13 @@ impl Engine {
             }
         });
     }
+}
+
+pub trait RigidBody {
+    fn apply_forces(&mut self, g: f32, c: f32, time_mult: f32);
+    fn draw(&self);
+    fn update_ui(&mut self, egui_ctx: &Context, index: usize);
+    fn get_enabled(&self) -> bool;
 }
 
 fn draw_background() {

@@ -1,7 +1,8 @@
 use macroquad::prelude::*;
 
 mod engine;
-mod rigid_body;
+mod rigid_square;
+mod rigid_circle;
 
 use engine::Engine;
 
