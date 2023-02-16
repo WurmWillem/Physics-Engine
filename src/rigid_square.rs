@@ -1,7 +1,10 @@
 use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
-use crate::{METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES, engine::RigidBody};
+use crate::{engine::RigidBody, SCREEN_SIZE};
+
+pub const WORLD_SIZE: Vec2 = vec2(60., 52.5);
+pub const METRE_IN_PIXELS: Vec2 = vec2(SCREEN_SIZE.x / WORLD_SIZE.x, SCREEN_SIZE.y / WORLD_SIZE.y);
 
 const DIGITS_AFTER_DECIMAL: usize = 0;
 
@@ -41,9 +44,9 @@ impl RigidBody for RigidSquare {
         //p = p + v * dt
         let next_pos = self.pos + self.vel * delta_t;
 
-        if next_pos.y > SCREEN_SIZE_METRES.y {
+        if next_pos.y > WORLD_SIZE.y {
             self.vel.y = 0.;
-            self.pos.y = SCREEN_SIZE_METRES.y;
+            self.pos.y = WORLD_SIZE.y;
             f_res = Vec2::ZERO;
         } else if next_pos.y - self.size.y < 1. {
             self.vel.y = 0.;
@@ -136,7 +139,6 @@ impl RigidSquare {
             default_mass: mass,
         }
     }
-    
 }
 
 trait Format {
