@@ -1,7 +1,10 @@
 use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
-use crate::{engine::RigidBody, SCREEN_SIZE};
+use crate::{
+    engine::{RigidBody, Variables},
+    SCREEN_SIZE,
+};
 
 pub const WORLD_SIZE: Vec2 = vec2(60., 52.5);
 pub const METRE_IN_PIXELS: Vec2 = vec2(SCREEN_SIZE.x / WORLD_SIZE.x, SCREEN_SIZE.y / WORLD_SIZE.y);
@@ -10,7 +13,7 @@ const DIGITS_AFTER_DECIMAL: usize = 0;
 
 #[derive(Debug, Clone, Copy)]
 pub struct RigidSquare {
-    pub enabled: bool,
+    enabled: bool,
     mass: f32,
     pos: Vec2,
     vel: Vec2,
@@ -22,8 +25,17 @@ pub struct RigidSquare {
     default_mass: f32,
 }
 impl RigidBody for RigidSquare {
-    fn apply_forces(&mut self, g: f32, c: f32, time_mult: f32) {
+    fn apply_forces(&mut self, vars: Variables, time_mult: f32) {
         let delta_t = get_frame_time() * time_mult;
+
+        let g = match vars.g {
+            Some(g_) => g_,
+            None => panic!("g is None"),
+        };
+        let c = match vars.c {
+            Some(c_) => c_,
+            None => panic!("c is None"),
+        };
 
         let mut f_res = Vec2::ZERO;
 

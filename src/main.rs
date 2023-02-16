@@ -3,8 +3,10 @@ use macroquad::prelude::*;
 mod engine;
 mod rigid_circle;
 mod rigid_square;
+mod scenes;
 
-use engine::{Engine, Scene};
+use engine::Engine;
+use scenes::Scene;
 
 pub const SCREEN_SIZE: Vec2 = vec2(800., 700.);
 

@@ -2,13 +2,17 @@ use egui_macroquad::egui::Context;
 //use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
-use crate::{engine::RigidBody, SCREEN_SIZE};
+use crate::{
+    engine::{RigidBody, Variables},
+    SCREEN_SIZE,
+}; //0.69634
 
-pub const WORLD_SIZE: Vec2 = vec2(60., 52.5);
-pub const METRE_IN_PIXELS: Vec2 = vec2(SCREEN_SIZE.x / WORLD_SIZE.x, SCREEN_SIZE.y / WORLD_SIZE.y);
+pub const WORLD_SIZE: Vec2 = vec2(6.9634, 7.9582);
+pub const MEGA_METRE_IN_PIXELS: Vec2 =
+    vec2(SCREEN_SIZE.x / WORLD_SIZE.x, SCREEN_SIZE.y / WORLD_SIZE.y);
 
 pub struct RigidCirle {
-    pub enabled: bool,
+    enabled: bool,
     mass: f32,
     radius: f32,
     pos: Vec2,
@@ -34,14 +38,14 @@ impl RigidCirle {
     }
 }
 impl RigidBody for RigidCirle {
-    fn apply_forces(&mut self, _g: f32, _c: f32, _time_mult: f32) {
+    fn apply_forces(&mut self, _vars: Variables, _time_mult: f32) {
         //todo!()
     }
     fn draw(&self) {
         draw_circle(
-            self.pos.x * METRE_IN_PIXELS.x,
-            self.pos.y * METRE_IN_PIXELS.y,
-            self.radius * METRE_IN_PIXELS.x,
+            self.pos.x * MEGA_METRE_IN_PIXELS.x,
+            self.pos.y * MEGA_METRE_IN_PIXELS.y,
+            self.radius * MEGA_METRE_IN_PIXELS.x,
             RED,
         )
     }
