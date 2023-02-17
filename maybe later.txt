@@ -12,3 +12,11 @@ fn convert_local_to_metres(v: Vec2) -> Vec2 {
 //    FallingSquares,
 //    SolarSystem,
 //}
+
+impl Clone for Box<dyn RigidBody> {
+    fn clone(&self) -> Self {
+        //self.clone_dyn()
+        //self.clone()
+        dyn_clone::clone(self)
+    }
+}

@@ -2,10 +2,13 @@ use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
 use crate::scenes::Scene;
+use dyn_clone::DynClone;
+
+pub type RigidBodies = Vec<Box<dyn RigidBody>>;
 
 pub struct Engine {
     scene: Scene,
-    rigid_bodies: Vec<Box<dyn RigidBody>>,
+    rigid_bodies: RigidBodies,
     time_mult: f32,
     pause: bool,
     world_size: Vec2,
@@ -27,9 +30,10 @@ impl Engine {
     pub fn update(&mut self) {
         self.update_ui();
         if !self.pause {
+            let rigid_bodies = clone_rigid_bodies(&self.rigid_bodies);
             self.rigid_bodies.iter_mut().for_each(|rb| {
                 if rb.get_enabled() {
-                    rb.apply_forces(self.vars, self.time_mult);
+                    rb.apply_forces(self.vars, self.time_mult, &rigid_bodies);
                 }
             });
         }
@@ -69,7 +73,6 @@ impl Engine {
                     ui.checkbox(&mut self.pause, "pause");
                 });
 
-                //if self.scene == Scene::FallingSquares {
                 ui.separator();
                 ui.heading("Variables").on_hover_text(
                     "Variables used in equations to deduce the forces applied to each rigidbody",
@@ -89,10 +92,10 @@ impl Engine {
                         }
                     });
                     self.vars.g = Some(g);
-                    ui.separator();
                 }
 
                 if let Some(mut c) = self.vars.c {
+                    ui.separator();
                     ui.horizontal(|ui| {
                         ui.label("c:")
                             .on_hover_text("Multiplier for the air resistance");
@@ -108,7 +111,6 @@ impl Engine {
                     });
                     self.vars.c = Some(c);
                 }
-                //}
             });
             for i in 0..self.rigid_bodies.len() {
                 self.rigid_bodies[i].update_ui(egui_ctx, i + 1);
@@ -117,8 +119,17 @@ impl Engine {
     }
 }
 
-pub trait RigidBody {
-    fn apply_forces(&mut self, vars: Variables, time_mult: f32);
+fn clone_rigid_bodies(v: &RigidBodies) -> RigidBodies {
+    let mut rigid_bodies = Vec::new();
+    for i in 0..v.len() {
+        let rb = dyn_clone::clone_box(&*v[i]);
+        rigid_bodies.push(rb);
+    }
+    rigid_bodies
+}
+
+pub trait RigidBody: DynClone {
+    fn apply_forces(&mut self, vars: Variables, time_mult: f32, rigid_bodies: &RigidBodies);
     fn draw(&self);
     fn update_ui(&mut self, egui_ctx: &Context, index: usize);
     fn get_enabled(&self) -> bool;

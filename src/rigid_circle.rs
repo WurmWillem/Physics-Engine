@@ -3,14 +3,15 @@ use egui_macroquad::egui::Context;
 use macroquad::prelude::*;
 
 use crate::{
-    engine::{RigidBody, Variables},
+    engine::{RigidBodies, RigidBody, Variables},
     SCREEN_SIZE,
-}; //0.69634
+};
 
 pub const WORLD_SIZE: Vec2 = vec2(6.9634, 7.9582);
 pub const MEGA_METRE_IN_PIXELS: Vec2 =
     vec2(SCREEN_SIZE.x / WORLD_SIZE.x, SCREEN_SIZE.y / WORLD_SIZE.y);
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct RigidCirle {
     enabled: bool,
     mass: f32,
@@ -38,8 +39,19 @@ impl RigidCirle {
     }
 }
 impl RigidBody for RigidCirle {
-    fn apply_forces(&mut self, _vars: Variables, _time_mult: f32) {
-        //todo!()
+    fn apply_forces(&mut self, vars: Variables, time_mult: f32, rigid_bodies: &RigidBodies) {
+        let delta_t = get_frame_time() * time_mult;
+
+        let g = match vars.g {
+            Some(g_) => g_,
+            None => panic!("g is None"),
+        };
+
+        let mut f_res = Vec2::ZERO;
+
+        //Fg = g * m1 * m2 / (r*r)
+        let f_g = g * self.mass / (self.radius.powf(2.));
+        f_res.y += f_g;
     }
     fn draw(&self) {
         draw_circle(

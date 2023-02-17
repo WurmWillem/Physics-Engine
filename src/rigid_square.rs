@@ -2,7 +2,7 @@ use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
 use crate::{
-    engine::{RigidBody, Variables},
+    engine::{RigidBodies, RigidBody, Variables},
     SCREEN_SIZE,
 };
 
@@ -25,7 +25,7 @@ pub struct RigidSquare {
     default_mass: f32,
 }
 impl RigidBody for RigidSquare {
-    fn apply_forces(&mut self, vars: Variables, time_mult: f32) {
+    fn apply_forces(&mut self, vars: Variables, time_mult: f32, _rigid_bodies: &RigidBodies) {
         let delta_t = get_frame_time() * time_mult;
 
         let g = match vars.g {
