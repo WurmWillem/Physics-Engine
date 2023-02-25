@@ -2,7 +2,8 @@ use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
 use crate::{
-    engine::{RigidBodies, RigidBody, Variables},
+    engine::{RigidBodies, RigidBody},
+    scenes::Variables,
     SCREEN_SIZE,
 };
 

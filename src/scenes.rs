@@ -10,13 +10,13 @@ use crate::{
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Scene {
     FallingSquares,
-    SolarSystem,
+    BouncingBall,
 }
 impl Scene {
     pub fn get_world_size(&self) -> Vec2 {
         match self {
             Scene::FallingSquares => rigid_square::WORLD_SIZE,
-            Scene::SolarSystem => rigid_circle::WORLD_SIZE,
+            Scene::BouncingBall => rigid_circle::WORLD_SIZE,
         }
     }
 
@@ -33,9 +33,9 @@ impl Scene {
                 let rs1 = RigidSquare::new(100., pos1, size1);
                 vec![Box::new(rs0), Box::new(rs1)]
             }
-            Scene::SolarSystem => {
+            Scene::BouncingBall => {
                 let pos0 = vec2(world_size.x * 0.5, world_size.y * 0.5);
-                let rc0 = RigidCirle::new(10., pos0, 0.69634);
+                let rc0 = RigidCirle::new(1., pos0, 1.);
                 vec![Box::new(rc0)]
             }
         }
@@ -43,13 +43,13 @@ impl Scene {
 
     pub fn get_next_scene(&self) -> Self {
         match self {
-            Scene::FallingSquares => Scene::SolarSystem,
-            Scene::SolarSystem => Scene::FallingSquares,
+            Scene::FallingSquares => Scene::BouncingBall,
+            Scene::BouncingBall => Scene::FallingSquares,
         }
     }
 
     pub fn draw_background(&self) {
-        if *self == Scene::FallingSquares {
+        if *self == Scene::FallingSquares || *self == Scene::BouncingBall {
             let world_size = self.get_world_size();
             let metre_in_pixels = SCREEN_SIZE / world_size;
             for x in 0..=(world_size.x as usize) {
@@ -80,6 +80,26 @@ impl Scene {
                 metre_in_pixels.y * 2.,
                 BROWN,
             )
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Variables {
+    pub g: Option<f32>,
+    pub c: Option<f32>,
+}
+impl Variables {
+    pub fn new(scene: Scene) -> Self {
+        match scene {
+            Scene::FallingSquares => Self {
+                g: Some(0.),
+                c: Some(1.),
+            },
+            Scene::BouncingBall => Self {
+                g: Some(0.),
+                c: Some(0.),
+            },
         }
     }
 }

@@ -1,7 +1,7 @@
 use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
-use crate::scenes::Scene;
+use crate::scenes::{Scene, Variables};
 use dyn_clone::DynClone;
 
 pub type RigidBodies = Vec<Box<dyn RigidBody>>;
@@ -133,24 +133,4 @@ pub trait RigidBody: DynClone {
     fn draw(&self);
     fn update_ui(&mut self, egui_ctx: &Context, index: usize);
     fn get_enabled(&self) -> bool;
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Variables {
-    pub g: Option<f32>,
-    pub c: Option<f32>,
-}
-impl Variables {
-    fn new(scene: Scene) -> Self {
-        match scene {
-            Scene::FallingSquares => Self {
-                g: Some(0.),
-                c: Some(1.),
-            },
-            Scene::SolarSystem => Self {
-                g: Some(1.),
-                c: None,
-            },
-        }
-    }
 }
