@@ -59,9 +59,13 @@ impl Engine {
                         .on_hover_text("delta time gets multiplied by this");
                     ui.add(egui::Slider::new(&mut self.time_mult, (0.)..=2.));
                 });
-                if ui.button("Reset to 1").clicked() {
-                    self.time_mult = 1.;
-                }
+                ui.horizontal(|ui| {
+                    if ui.button("Reset to 1").clicked() {
+                        self.time_mult = 1.;
+                    }
+                    ui.checkbox(&mut self.pause, "pause");
+                });
+                
                 ui.label(format!("World size: {} m", self.world_size));
                 ui.horizontal(|ui| {
                     if ui.button("Reset everything").clicked() {
@@ -70,7 +74,6 @@ impl Engine {
                     if ui.button("Reset all entities").clicked() {
                         self.rigid_bodies = self.scene.get_rigid_bodies();
                     }
-                    ui.checkbox(&mut self.pause, "pause");
                 });
 
                 ui.separator();

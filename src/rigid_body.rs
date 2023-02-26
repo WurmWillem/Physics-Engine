@@ -15,22 +15,6 @@ pub trait RigidBody: DynClone {
     fn get_enabled(&self) -> bool;
 }
 
-pub trait Format {
-    fn format(&self) -> Self;
-}
-impl Format for f32 {
-    fn format(&self) -> Self {
-        let f = *self * (DIGITS_AFTER_DECIMAL + 1) as f32;
-        let f = f.round();
-        f / (DIGITS_AFTER_DECIMAL + 1) as f32
-    }
-}
-impl Format for Vec2 {
-    fn format(&self) -> Self {
-        vec2(self.x.format(), self.y.format())
-    }
-}
-
 #[derive(Debug, Clone, Copy)]
 pub struct Forces {
     pub f_res: Vec2,
@@ -66,5 +50,20 @@ impl Forces {
                 ));
             }
         });
+    }
+}
+
+pub trait Format {
+    fn format(&self) -> Self;
+}
+impl Format for f32 {
+    fn format(&self) -> Self {
+        let f = *self * (DIGITS_AFTER_DECIMAL + 1) as f32;
+        f.round() / (DIGITS_AFTER_DECIMAL + 1) as f32
+    }
+}
+impl Format for Vec2 {
+    fn format(&self) -> Self {
+        vec2(self.x.format(), self.y.format())
     }
 }
