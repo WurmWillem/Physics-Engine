@@ -1,10 +1,7 @@
-use egui_macroquad::egui::{self};
+use egui_macroquad::egui::{self, Ui};
 use macroquad::prelude::*;
 
-use crate::{
-    rigid_body::{RigidBodies, Variables},
-    scenes::Scene,
-};
+use crate::{rigid_body::RigidBodies, scenes::Scene};
 
 pub struct Engine {
     scene: Scene,
@@ -81,44 +78,56 @@ impl Engine {
                     "Variables used in equations to deduce the forces applied to each rigidbody",
                 );
 
-                if let Some(mut g) = self.vars.g {
-                    ui.horizontal(|ui| {
-                        ui.label("g:").on_hover_text("Acceleration due to gravity");
-                        ui.add(egui::Slider::new(&mut g, (-30.)..=30.));
-                    });
-                    ui.horizontal(|ui| {
-                        if ui.button("Reset to default").clicked() {
-                            g = 9.81;
-                        }
-                        if ui.button("Reset to 0").clicked() {
-                            g = 0.;
-                        }
-                    });
-                    self.vars.g = Some(g);
-                }
-
-                if let Some(mut c) = self.vars.c {
-                    ui.separator();
-                    ui.horizontal(|ui| {
-                        ui.label("c:")
-                            .on_hover_text("Multiplier for the air resistance");
-                        ui.add(egui::Slider::new(&mut c, (-1.)..=30.));
-                    });
-                    ui.horizontal(|ui| {
-                        if ui.button("Reset to default").clicked() {
-                            c = 1.;
-                        }
-                        if ui.button("Reset to 0").clicked() {
-                            c = 0.;
-                        }
-                    });
-                    self.vars.c = Some(c);
-                }
+                self.vars.update_ui(ui);
             });
             for i in 0..self.rigid_bodies.len() {
                 self.rigid_bodies[i].update_ui(egui_ctx, i + 1);
             }
         });
+    }
+}
+
+
+#[derive(Debug, Clone, Copy)]
+pub struct Variables {
+    pub g: Option<f32>,
+    pub c: Option<f32>,
+}
+impl Variables {
+    pub fn update_ui(&mut self, ui: &mut Ui) {
+        if let Some(mut g) = self.g {
+            ui.horizontal(|ui| {
+                ui.label("g:").on_hover_text("Acceleration due to gravity");
+                ui.add(egui::Slider::new(&mut g, (-30.)..=30.));
+            });
+            ui.horizontal(|ui| {
+                if ui.button("Reset to default").clicked() {
+                    g = 9.81;
+                }
+                if ui.button("Reset to 0").clicked() {
+                    g = 0.;
+                }
+            });
+            self.g = Some(g);
+        }
+
+        if let Some(mut c) = self.c {
+            ui.separator();
+            ui.horizontal(|ui| {
+                ui.label("c:")
+                    .on_hover_text("Multiplier for the air resistance");
+                ui.add(egui::Slider::new(&mut c, (-1.)..=30.));
+            });
+            ui.horizontal(|ui| {
+                if ui.button("Reset to default").clicked() {
+                    c = 1.;
+                }
+                if ui.button("Reset to 0").clicked() {
+                    c = 0.;
+                }
+            });
+            self.c = Some(c);
+        }
     }
 }
 

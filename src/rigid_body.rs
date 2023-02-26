@@ -2,6 +2,8 @@ use dyn_clone::DynClone;
 use egui_macroquad::egui::{Context, Ui};
 use macroquad::prelude::{vec2, Vec2};
 
+use crate::engine::Variables;
+
 pub type RigidBodies = Vec<Box<dyn RigidBody>>;
 
 const DIGITS_AFTER_DECIMAL: usize = 0;
@@ -11,12 +13,6 @@ pub trait RigidBody: DynClone {
     fn draw(&self);
     fn update_ui(&mut self, egui_ctx: &Context, index: usize);
     fn get_enabled(&self) -> bool;
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Variables {
-    pub g: Option<f32>,
-    pub c: Option<f32>,
 }
 
 pub trait Format {

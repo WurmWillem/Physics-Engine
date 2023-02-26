@@ -2,7 +2,8 @@ use macroquad::prelude::*;
 
 use crate::{
     bouncing_ball::{self, BouncingBall},
-    rigid_body::{RigidBody, Variables},
+    engine::Variables,
+    rigid_body::RigidBody,
     rigid_square::{self, RigidSquare},
     SCREEN_SIZE,
 };
