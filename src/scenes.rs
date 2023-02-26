@@ -1,11 +1,13 @@
 use macroquad::prelude::*;
 
 use crate::{
+    bouncing_ball::{self, BouncingBall},
     engine::RigidBody,
-    rigid_circle::{self, RigidCirle},
     rigid_square::{self, RigidSquare},
     SCREEN_SIZE,
 };
+
+const DIGITS_AFTER_DECIMAL: usize = 0;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Scene {
@@ -16,7 +18,7 @@ impl Scene {
     pub fn get_world_size(&self) -> Vec2 {
         match self {
             Scene::FallingSquares => rigid_square::WORLD_SIZE,
-            Scene::BouncingBall => rigid_circle::WORLD_SIZE,
+            Scene::BouncingBall => bouncing_ball::WORLD_SIZE,
         }
     }
 
@@ -34,9 +36,14 @@ impl Scene {
                 vec![Box::new(rs0), Box::new(rs1)]
             }
             Scene::BouncingBall => {
-                let pos0 = vec2(world_size.x * 0.5, world_size.y * 0.5);
-                let rc0 = RigidCirle::new(1., pos0, 1.);
-                vec![Box::new(rc0)]
+                let radius_0 = 0.5;
+                let radius_1 = 1.;
+                let pos0 = vec2(world_size.x * 0.4, world_size.y * 0.5 + radius_0);
+                let pos1 = vec2(world_size.x * 0.6, world_size.y * 0.5 + radius_1);
+
+                let rc0 = BouncingBall::new(1., pos0, radius_0);
+                let rc1 = BouncingBall::new(10., pos1, radius_1);
+                vec![Box::new(rc0), Box::new(rc1)]
             }
         }
     }
@@ -98,8 +105,24 @@ impl Variables {
             },
             Scene::BouncingBall => Self {
                 g: Some(0.),
-                c: Some(0.),
+                c: Some(0.1),
             },
         }
+    }
+}
+
+pub trait Format {
+    fn format(&self) -> Self;
+}
+impl Format for f32 {
+    fn format(&self) -> Self {
+        let f = *self * (DIGITS_AFTER_DECIMAL + 1) as f32;
+        let f = f.round();
+        f / (DIGITS_AFTER_DECIMAL + 1) as f32
+    }
+}
+impl Format for Vec2 {
+    fn format(&self) -> Self {
+        vec2(self.x.format(), self.y.format())
     }
 }

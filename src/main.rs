@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 
+mod bouncing_ball;
 mod engine;
-mod rigid_circle;
 mod rigid_square;
 mod scenes;
 

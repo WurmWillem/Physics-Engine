@@ -7,23 +7,39 @@ use crate::{
     SCREEN_SIZE,
 };
 
-pub const WORLD_SIZE: Vec2 = vec2(60., 52.5);
+pub const WORLD_SIZE: Vec2 = vec2(40., 35.);
 pub const METRE_IN_PIXELS: Vec2 = vec2(SCREEN_SIZE.x / WORLD_SIZE.x, SCREEN_SIZE.y / WORLD_SIZE.y);
 
-#[derive(Debug, Clone, Copy)]
-pub struct RigidSquare {
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct BouncingBall {
     enabled: bool,
     mass: f32,
+    radius: f32,
     pos: Vec2,
     vel: Vec2,
-    size: Vec2,
     f_res: Vec2,
-    f_g: f32,
     f_air: Vec2,
+    f_g: f32,
     default_pos: Vec2,
     default_mass: f32,
 }
-impl RigidBody for RigidSquare {
+impl BouncingBall {
+    pub fn new(mass: f32, pos: Vec2, radius: f32) -> Self {
+        Self {
+            enabled: true,
+            mass,
+            radius,
+            pos,
+            vel: Vec2::ZERO,
+            f_res: Vec2::ZERO,
+            f_air: Vec2::ZERO,
+            f_g: 0.,
+            default_pos: pos,
+            default_mass: mass,
+        }
+    }
+}
+impl RigidBody for BouncingBall {
     fn apply_forces(&mut self, vars: Variables, time_mult: f32, _rigid_bodies: &RigidBodies) {
         let delta_t = get_frame_time() * time_mult;
 
@@ -43,7 +59,7 @@ impl RigidBody for RigidSquare {
         f_res.y -= f_g;
 
         //F_Air = 0.5 * p * A * v*v = c * A * v*v in our case because k = 0.5 * p
-        let f_air = c * self.size.x * self.vel * self.vel.abs();
+        let f_air = c * self.radius * 2. * self.vel * self.vel.abs();
         f_res -= f_air;
 
         //a = f / m
@@ -55,50 +71,46 @@ impl RigidBody for RigidSquare {
         //p = p + v * dt
         let next_pos = self.pos + self.vel * delta_t;
 
-        if next_pos.y > WORLD_SIZE.y {
-            self.vel.y = 0.;
-            self.pos.y = WORLD_SIZE.y;
-            f_res = Vec2::ZERO;
-        } else if next_pos.y - self.size.y < 1. {
-            self.vel.y = 0.;
-            self.pos.y = self.size.y + 1.;
-            f_res = Vec2::ZERO;
+        if next_pos.y + self.radius > WORLD_SIZE.y {
+            self.vel.y *= -1.;
+            self.pos.y = WORLD_SIZE.y - self.radius;
+        } else if next_pos.y - self.radius - 1. < 0. {
+            self.vel.y *= -1.;
+            self.pos.y = self.radius + 1.;
         } else {
             self.pos = next_pos;
         }
-        self.f_res = f_res;
-        self.f_g = f_g;
         self.f_air = f_air;
+        self.f_g = f_g;
+        self.f_res = f_res;
     }
-
     fn draw(&self) {
-        draw_rectangle(
+        draw_circle(
             self.pos.x * METRE_IN_PIXELS.x,
             SCREEN_SIZE.y - self.pos.y * METRE_IN_PIXELS.y,
-            self.size.x * METRE_IN_PIXELS.x,
-            self.size.y * METRE_IN_PIXELS.y,
+            self.radius * METRE_IN_PIXELS.x,
             RED,
-        );
+        )
     }
-
     fn update_ui(&mut self, egui_ctx: &Context, index: usize) {
-        egui::Window::new(format!("Rigidbody {index}")).show(egui_ctx, |ui| {
+        egui::Window::new(format!("Bouncing ball {index}")).show(egui_ctx, |ui| {
             ui.set_max_width(200.);
             ui.horizontal(|ui| {
                 ui.checkbox(&mut self.enabled, "enabled");
                 if ui.button("Reset all").clicked() {
-                    *self = RigidSquare::new(self.default_mass, self.default_pos, self.size);
+                    *self = BouncingBall::new(self.default_mass, self.default_pos, self.radius);
                 }
             });
 
             ui.collapsing("Show data", |ui| {
+                ui.heading("Data");
                 ui.horizontal(|ui| {
                     ui.label("Mass:");
-                    ui.add(egui::Slider::new(&mut self.mass, (0.1)..=300.));
+                    ui.add(egui::Slider::new(&mut self.mass, (0.1)..=30.));
                     ui.label("kg");
                 });
 
-                ui.label(format!("Size: {} m", self.size));
+                ui.label(format!("Radius: {} m", self.radius));
                 ui.horizontal(|ui| {
                     ui.label(format!("Velocity: {} m/s", self.vel.format()));
                     if ui.button("Reset").clicked() {
@@ -114,7 +126,7 @@ impl RigidBody for RigidSquare {
                 });
             });
 
-            ui.collapsing("Show forces", |ui| {
+            ui.collapsing("Show Forces", |ui| {
                 ui.label(format!(
                     "F_res = {} = {} N",
                     self.f_res.format(),
@@ -132,21 +144,5 @@ impl RigidBody for RigidSquare {
     }
     fn get_enabled(&self) -> bool {
         self.enabled
-    }
-}
-impl RigidSquare {
-    pub fn new(mass: f32, pos: Vec2, size: Vec2) -> Self {
-        Self {
-            mass,
-            pos,
-            vel: Vec2::ZERO,
-            size,
-            enabled: true,
-            f_res: Vec2::ZERO,
-            f_g: 0.,
-            f_air: Vec2::ZERO,
-            default_pos: pos,
-            default_mass: mass,
-        }
     }
 }

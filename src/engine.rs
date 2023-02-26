@@ -67,8 +67,11 @@ impl Engine {
                 }
                 ui.label(format!("World size: {} m", self.world_size));
                 ui.horizontal(|ui| {
-                    if ui.button("Reset all").clicked() {
+                    if ui.button("Reset everything").clicked() {
                         *self = Engine::new(self.scene);
+                    }
+                    if ui.button("Reset all entities").clicked() {
+                        self.rigid_bodies = self.scene.get_rigid_bodies();
                     }
                     ui.checkbox(&mut self.pause, "pause");
                 });
