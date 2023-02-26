@@ -1,10 +1,10 @@
-use egui_macroquad::egui::{self, Context};
+use egui_macroquad::egui::{self};
 use macroquad::prelude::*;
 
-use crate::scenes::{Scene};
-use dyn_clone::DynClone;
-
-pub type RigidBodies = Vec<Box<dyn RigidBody>>;
+use crate::{
+    rigid_body::{RigidBodies, Variables},
+    scenes::Scene,
+};
 
 pub struct Engine {
     scene: Scene,
@@ -129,17 +129,4 @@ fn clone_rigid_bodies(v: &RigidBodies) -> RigidBodies {
         rigid_bodies.push(rb);
     }
     rigid_bodies
-}
-
-pub trait RigidBody: DynClone {
-    fn apply_forces(&mut self, vars: Variables, time_mult: f32, rigid_bodies: &RigidBodies);
-    fn draw(&self);
-    fn update_ui(&mut self, egui_ctx: &Context, index: usize);
-    fn get_enabled(&self) -> bool;
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Variables {
-    pub g: Option<f32>,
-    pub c: Option<f32>,
 }
