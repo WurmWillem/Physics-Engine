@@ -2,8 +2,8 @@ use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
 use crate::{
-    engine::{RigidBodies, RigidBody},
-    scenes::{Format, Variables},
+    engine::{RigidBodies, RigidBody, Variables},
+    scenes::{Forces, Format},
     SCREEN_SIZE,
 };
 
@@ -17,11 +17,24 @@ pub struct RigidSquare {
     pos: Vec2,
     vel: Vec2,
     size: Vec2,
-    f_res: Vec2,
-    f_g: f32,
-    f_air: Vec2,
+    forces: Forces,
     default_pos: Vec2,
     default_mass: f32,
+}
+impl RigidSquare {
+    pub fn new(mass: f32, pos: Vec2, size: Vec2) -> Self {
+        let forces = Forces::new(true, true);
+        Self {
+            mass,
+            pos,
+            vel: Vec2::ZERO,
+            size,
+            enabled: true,
+            forces,
+            default_pos: pos,
+            default_mass: mass,
+        }
+    }
 }
 impl RigidBody for RigidSquare {
     fn apply_forces(&mut self, vars: Variables, time_mult: f32, _rigid_bodies: &RigidBodies) {
@@ -66,9 +79,9 @@ impl RigidBody for RigidSquare {
         } else {
             self.pos = next_pos;
         }
-        self.f_res = f_res;
-        self.f_g = f_g;
-        self.f_air = f_air;
+        self.forces.f_res = f_res;
+        self.forces.f_g = Some(f_g);
+        self.forces.f_air = Some(f_air);
     }
 
     fn draw(&self) {
@@ -113,40 +126,10 @@ impl RigidBody for RigidSquare {
                     }
                 });
             });
-
-            ui.collapsing("Show forces", |ui| {
-                ui.label(format!(
-                    "F_res = {} = {} N",
-                    self.f_res.format(),
-                    self.f_res.length().format()
-                ));
-                ui.label(format!("Gravity: m * g = {} N", self.f_g.format()));
-                ui.label("Air resistance: c * A * v*v =");
-                ui.label(format!(
-                    "{} = {} N",
-                    self.f_air.format(),
-                    self.f_air.length().format()
-                ));
-            });
+            self.forces.display_ui(ui);
         });
     }
     fn get_enabled(&self) -> bool {
         self.enabled
-    }
-}
-impl RigidSquare {
-    pub fn new(mass: f32, pos: Vec2, size: Vec2) -> Self {
-        Self {
-            mass,
-            pos,
-            vel: Vec2::ZERO,
-            size,
-            enabled: true,
-            f_res: Vec2::ZERO,
-            f_g: 0.,
-            f_air: Vec2::ZERO,
-            default_pos: pos,
-            default_mass: mass,
-        }
     }
 }

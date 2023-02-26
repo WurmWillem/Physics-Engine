@@ -2,38 +2,35 @@ use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
 use crate::{
-    engine::{RigidBodies, RigidBody},
-    scenes::{Format, Variables},
+    engine::{RigidBodies, RigidBody, Variables},
+    scenes::{Forces, Format},
     SCREEN_SIZE,
 };
 
 pub const WORLD_SIZE: Vec2 = vec2(40., 35.);
 pub const METRE_IN_PIXELS: Vec2 = vec2(SCREEN_SIZE.x / WORLD_SIZE.x, SCREEN_SIZE.y / WORLD_SIZE.y);
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy)]
 pub struct BouncingBall {
     enabled: bool,
     mass: f32,
     radius: f32,
     pos: Vec2,
     vel: Vec2,
-    f_res: Vec2,
-    f_air: Vec2,
-    f_g: f32,
+    forces: Forces,
     default_pos: Vec2,
     default_mass: f32,
 }
 impl BouncingBall {
     pub fn new(mass: f32, pos: Vec2, radius: f32) -> Self {
+        let forces = Forces::new(true, true);
         Self {
             enabled: true,
             mass,
             radius,
             pos,
             vel: Vec2::ZERO,
-            f_res: Vec2::ZERO,
-            f_air: Vec2::ZERO,
-            f_g: 0.,
+            forces,
             default_pos: pos,
             default_mass: mass,
         }
@@ -80,9 +77,9 @@ impl RigidBody for BouncingBall {
         } else {
             self.pos = next_pos;
         }
-        self.f_air = f_air;
-        self.f_g = f_g;
-        self.f_res = f_res;
+        self.forces.f_res = f_res;
+        self.forces.f_g = Some(f_g);
+        self.forces.f_air = Some(f_air);
     }
     fn draw(&self) {
         draw_circle(
@@ -125,21 +122,7 @@ impl RigidBody for BouncingBall {
                     }
                 });
             });
-
-            ui.collapsing("Show Forces", |ui| {
-                ui.label(format!(
-                    "F_res = {} = {} N",
-                    self.f_res.format(),
-                    self.f_res.length().format()
-                ));
-                ui.label(format!("Gravity: m * g = {} N", self.f_g.format()));
-                ui.label("Air resistance: c * A * v*v =");
-                ui.label(format!(
-                    "{} = {} N",
-                    self.f_air.format(),
-                    self.f_air.length().format()
-                ));
-            });
+            self.forces.display_ui(ui);
         });
     }
     fn get_enabled(&self) -> bool {

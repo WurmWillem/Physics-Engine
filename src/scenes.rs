@@ -1,8 +1,9 @@
+use egui_macroquad::egui::Ui;
 use macroquad::prelude::*;
 
 use crate::{
     bouncing_ball::{self, BouncingBall},
-    engine::RigidBody,
+    engine::{RigidBody, Variables},
     rigid_square::{self, RigidSquare},
     SCREEN_SIZE,
 };
@@ -21,7 +22,6 @@ impl Scene {
             Scene::BouncingBall => bouncing_ball::WORLD_SIZE,
         }
     }
-
     pub fn get_rigid_bodies(&self) -> Vec<Box<dyn RigidBody>> {
         let world_size = self.get_world_size();
         match self {
@@ -47,14 +47,24 @@ impl Scene {
             }
         }
     }
-
     pub fn get_next_scene(&self) -> Self {
         match self {
             Scene::FallingSquares => Scene::BouncingBall,
             Scene::BouncingBall => Scene::FallingSquares,
         }
     }
-
+    pub fn get_variables(&self) -> Variables {
+        match self {
+            Scene::FallingSquares => Variables {
+                g: Some(0.),
+                c: Some(1.),
+            },
+            Scene::BouncingBall => Variables {
+                g: Some(0.),
+                c: Some(0.1),
+            },
+        }
+    }
     pub fn draw_background(&self) {
         if *self == Scene::FallingSquares || *self == Scene::BouncingBall {
             let world_size = self.get_world_size();
@@ -92,22 +102,40 @@ impl Scene {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Variables {
-    pub g: Option<f32>,
-    pub c: Option<f32>,
+pub struct Forces {
+    pub f_res: Vec2,
+    pub f_g: Option<f32>,
+    pub f_air: Option<Vec2>,
 }
-impl Variables {
-    pub fn new(scene: Scene) -> Self {
-        match scene {
-            Scene::FallingSquares => Self {
-                g: Some(0.),
-                c: Some(1.),
-            },
-            Scene::BouncingBall => Self {
-                g: Some(0.),
-                c: Some(0.1),
-            },
+impl Forces {
+    pub fn new(f_g_used: bool, f_air_used: bool) -> Self {
+        let f_g = if f_g_used { Some(0.) } else { None };
+        let f_air = if f_air_used { Some(Vec2::ZERO) } else { None };
+        Self {
+            f_res: Vec2::ZERO,
+            f_g,
+            f_air,
         }
+    }
+    pub fn display_ui(&self, ui: &mut Ui) {
+        ui.collapsing("Show forces", |ui| {
+            ui.label(format!(
+                "F_res = {} = {} N",
+                self.f_res.format(),
+                self.f_res.length().format()
+            ));
+            if let Some(f_g) = self.f_g {
+                ui.label(format!("Gravity: m * g = {} N", f_g.format()));
+            }
+            if let Some(f_air) = self.f_air {
+                ui.label("Air resistance: c * A * v*v =");
+                ui.label(format!(
+                    "{} = {} N",
+                    f_air.format(),
+                    f_air.length().format()
+                ));
+            }
+        });
     }
 }
 
