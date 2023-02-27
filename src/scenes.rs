@@ -36,8 +36,8 @@ impl Scene {
                 vec![Box::new(rs0), Box::new(rs1)]
             }
             Scene::BouncingBall => {
-                let radius_0 = 0.5;
-                let radius_1 = 1.;
+                let radius_0 = 0.5 * 5.;
+                let radius_1 = 1. * 5.;
                 let pos0 = vec2(world_size.x * 0.4, world_size.y * 0.8 + radius_0);
                 let pos1 = vec2(world_size.x * 0.6, world_size.y * 0.8 + radius_1);
 
@@ -61,54 +61,54 @@ impl Scene {
             },
             Scene::BouncingBall => Variables {
                 g: Some(9.81),
-                c: Some(0.1),
+                c: Some(0.),
             },
         }
     }
     pub fn get_c_range(&self) -> RangeInclusive<f32> {
         match self {
             Scene::FallingSquares => (-1.)..=30.,
-            Scene::BouncingBall => (-0.01)..=1.
+            Scene::BouncingBall => (-0.01)..=1.,
         }
     }
     pub fn get_c_default(&self) -> f32 {
         match self {
             Scene::FallingSquares => 1.,
-            Scene::BouncingBall => 0.1
+            Scene::BouncingBall => 0.01,
         }
     }
     pub fn draw_background(&self) {
         //if *self == Scene::FallingSquares || *self == Scene::BouncingBall {
-            let world_size = self.get_world_size();
-            let metre_in_pixels = SCREEN_SIZE / world_size;
-            for x in 0..=(world_size.x as usize) {
-                draw_line(
-                    x as f32 * metre_in_pixels.x,
-                    0.,
-                    x as f32 * metre_in_pixels.x,
-                    SCREEN_SIZE.y,
-                    0.5,
-                    BLACK,
-                )
-            }
-            for y in 0..=(world_size.y as usize) {
-                draw_line(
-                    0.,
-                    SCREEN_SIZE.y - y as f32 * metre_in_pixels.y,
-                    SCREEN_SIZE.x,
-                    SCREEN_SIZE.y - y as f32 * metre_in_pixels.y,
-                    0.5,
-                    BLACK,
-                )
-            }
+        let world_size = self.get_world_size();
+        let metre_in_pixels = SCREEN_SIZE / world_size;
+        for x in 0..=(world_size.x as usize) {
+            draw_line(
+                x as f32 * metre_in_pixels.x,
+                0.,
+                x as f32 * metre_in_pixels.x,
+                SCREEN_SIZE.y,
+                0.5,
+                BLACK,
+            )
+        }
+        for y in 0..=(world_size.y as usize) {
             draw_line(
                 0.,
-                SCREEN_SIZE.y,
+                SCREEN_SIZE.y - y as f32 * metre_in_pixels.y,
                 SCREEN_SIZE.x,
-                SCREEN_SIZE.y,
-                metre_in_pixels.y * 2.,
-                BROWN,
+                SCREEN_SIZE.y - y as f32 * metre_in_pixels.y,
+                0.5,
+                BLACK,
             )
+        }
+        draw_line(
+            0.,
+            SCREEN_SIZE.y,
+            SCREEN_SIZE.x,
+            SCREEN_SIZE.y,
+            metre_in_pixels.y * 2.,
+            BROWN,
+        )
         //}
     }
 }

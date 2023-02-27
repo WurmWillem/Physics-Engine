@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 
 use crate::{
     engine::Variables,
-    rigid_body::{Forces, Format, RigidBodies, RigidBody},
+    rigid_body::{Forces, Format, RigidBodies, RigidBody, RigidBodyType},
     SCREEN_SIZE,
 };
 use macroquad::math::Vec2;
@@ -95,7 +95,7 @@ impl RigidBody for RigidSquare {
         );
     }
 
-    fn update_ui(&mut self, egui_ctx: &Context, index: usize) {
+    fn update_based_on_ui(&mut self, egui_ctx: &Context, index: usize) {
         egui::Window::new(format!("Rigidbody {index}")).show(egui_ctx, |ui| {
             ui.set_max_width(200.);
             ui.horizontal(|ui| {
@@ -130,7 +130,22 @@ impl RigidBody for RigidSquare {
             self.forces.display_ui(ui);
         });
     }
+    fn get_type(&self) -> RigidBodyType {
+        RigidBodyType::RigidSquare
+    }
     fn get_enabled(&self) -> bool {
         self.enabled
+    }
+    fn get_pos(&self) -> Vec2 {
+        self.pos
+    }
+    fn get_vel(&self) -> Vec2 {
+        self.vel
+    }
+    fn get_mass(&self) -> f32 {
+        self.mass
+    }
+    fn get_radius(&self) -> f32 {
+        panic!("rigid_square does not have property radius")
     }
 }

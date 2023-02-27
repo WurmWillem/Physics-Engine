@@ -1,4 +1,4 @@
-use crate::engine::Variables;
+use crate::{engine::Variables, rigid_body::RigidBodyType};
 use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
@@ -68,6 +68,31 @@ impl RigidBody for BouncingBall {
         //p = p + v * dt
         let next_pos = self.pos + self.vel * delta_t;
 
+        /*for rb in rigid_bodies {
+            if rb.get_pos() == self.pos || rb.get_type() != RigidBodyType::RigidBall {
+                continue;
+            }
+
+            let distance_between_balls = self.pos.distance(rb.get_pos());
+            if distance_between_balls > self.radius + rb.get_radius() {
+                continue;
+            }
+            let force = 0.5 * self.mass * self.vel.length_squared();
+            let dist = (self.pos - rb.get_pos()).normalize();
+            let force1 = 0.5 * rb.get_mass() * rb.get_vel().length_squared();
+            let dist1 = (rb.get_pos() - self.pos).normalize();
+
+            let vel = self.vel + force * dist - force1 * dist1;
+            let new_pos = self.pos + vel * delta_t;
+
+            if new_pos.distance(rb.get_pos()) < self.radius + rb.get_radius() {
+                //pr("off");
+                next_pos -= self.vel * delta_t
+            } else {
+                self.vel += vel * delta_t * 0.1;
+            }
+        }*/
+
         if next_pos.y + self.radius > WORLD_SIZE.y {
             self.vel.y *= -1.;
             self.pos.y = WORLD_SIZE.y - self.radius;
@@ -77,12 +102,10 @@ impl RigidBody for BouncingBall {
         } else if next_pos.x + self.radius > WORLD_SIZE.x {
             self.vel.x *= -1.;
             self.pos.x = WORLD_SIZE.x - self.radius;
-
         } else if next_pos.x - self.radius < 0. {
             self.vel.x *= -1.;
             self.pos.x = self.radius;
-        }
-        else {
+        } else {
             self.pos = next_pos;
         }
         self.forces.f_res = f_res;
@@ -97,43 +120,61 @@ impl RigidBody for BouncingBall {
             RED,
         )
     }
-    fn update_ui(&mut self, egui_ctx: &Context, index: usize) {
+    fn update_based_on_ui(&mut self, egui_ctx: &Context, index: usize) {
         egui::Window::new(format!("Bouncing ball {index}")).show(egui_ctx, |ui| {
             ui.set_max_width(200.);
-            ui.horizontal(|ui| {
-                ui.checkbox(&mut self.enabled, "enabled");
-                if ui.button("Reset all").clicked() {
-                    *self = BouncingBall::new(self.default_mass, self.default_pos, self.radius);
-                }
-            });
 
-            ui.collapsing("Show data", |ui| {
-                ui.heading("Data");
+            ui.collapsing("Show", |ui| {
                 ui.horizontal(|ui| {
-                    ui.label("Mass:");
-                    ui.add(egui::Slider::new(&mut self.mass, (0.1)..=30.));
-                    ui.label("kg");
-                });
-
-                ui.label(format!("Radius: {} m", self.radius));
-                ui.horizontal(|ui| {
-                    ui.label(format!("Velocity: {} m/s", self.vel.format()));
-                    if ui.button("Reset").clicked() {
-                        self.vel = Vec2::ZERO;
+                    ui.checkbox(&mut self.enabled, "enabled");
+                    if ui.button("Reset all").clicked() {
+                        *self = BouncingBall::new(self.default_mass, self.default_pos, self.radius);
                     }
                 });
 
-                ui.horizontal(|ui| {
-                    ui.label(format!("Position: {} m", self.pos.format()));
-                    if ui.button("Reset").clicked() {
-                        self.pos = self.default_pos;
-                    }
+                ui.collapsing("Show data", |ui| {
+                    ui.heading("Data");
+                    ui.horizontal(|ui| {
+                        ui.label("Mass:");
+                        ui.add(egui::Slider::new(&mut self.mass, (0.1)..=30.));
+                        ui.label("kg");
+                    });
+
+                    ui.label(format!("Radius: {} m", self.radius));
+                    ui.horizontal(|ui| {
+                        ui.label(format!("Velocity: {} m/s", self.vel.format()));
+                        if ui.button("Reset").clicked() {
+                            self.vel = Vec2::ZERO;
+                        }
+                    });
+
+                    ui.horizontal(|ui| {
+                        ui.label(format!("Position: {} m", self.pos.format()));
+                        if ui.button("Reset").clicked() {
+                            self.pos = self.default_pos;
+                        }
+                    });
                 });
+                self.forces.display_ui(ui);
             });
-            self.forces.display_ui(ui);
         });
+    }
+    fn get_type(&self) -> RigidBodyType {
+        RigidBodyType::RigidBall
     }
     fn get_enabled(&self) -> bool {
         self.enabled
+    }
+    fn get_pos(&self) -> Vec2 {
+        self.pos
+    }
+    fn get_vel(&self) -> Vec2 {
+        self.vel
+    }
+    fn get_mass(&self) -> f32 {
+        self.mass
+    }
+    fn get_radius(&self) -> f32 {
+        self.radius
     }
 }

@@ -1,7 +1,11 @@
 use egui_macroquad::egui::{self, Ui};
 use macroquad::prelude::*;
 
-use crate::{rigid_body::RigidBodies, scenes::Scene};
+use crate::{
+    pr,
+    rigid_body::{RigidBodies, RigidBodyType},
+    scenes::Scene,
+};
 
 pub struct Engine {
     scene: Scene,
@@ -13,19 +17,19 @@ pub struct Engine {
 }
 impl Engine {
     pub fn new(scene: Scene) -> Self {
-        let rigid_bodies = scene.get_rigid_bodies();
-        let vars = scene.get_variables();
         Self {
             scene,
-            rigid_bodies,
+            rigid_bodies: scene.get_rigid_bodies(),
             time_mult: 1.,
             pause: false,
             world_size: scene.get_world_size(),
-            vars,
+            vars: scene.get_variables(),
         }
     }
     pub fn update(&mut self) {
-        self.update_ui();
+        self.update_based_on_ui();
+
+        //apply forces on the rigidbodies
         if !self.pause {
             let rigid_bodies = clone_rigid_bodies(&self.rigid_bodies);
             self.rigid_bodies.iter_mut().for_each(|rb| {
@@ -34,9 +38,12 @@ impl Engine {
                 }
             });
         }
+
+        self.resolve_collisions();
     }
     pub fn draw(&self) {
         self.scene.draw_background();
+
         self.rigid_bodies.iter().for_each(|rb| {
             if rb.get_enabled() {
                 rb.draw();
@@ -44,7 +51,53 @@ impl Engine {
         });
     }
 
-    fn update_ui(&mut self) {
+    fn resolve_collisions(&mut self) {
+        for j in 0..self.rigid_bodies.len() {
+            for i in 0..self.rigid_bodies.len() {
+                if j == i
+                    || self.rigid_bodies[j].get_type() == RigidBodyType::RigidSquare
+                    || self.rigid_bodies[i].get_type() == RigidBodyType::RigidSquare
+                {
+                    continue;
+                }
+                let rb0 = &self.rigid_bodies[j];
+                let rb1 = &self.rigid_bodies[i];
+
+                let distance_between_balls = rb0.get_pos().distance(rb1.get_pos());
+                if distance_between_balls > rb0.get_radius() + rb1.get_radius() {
+                    continue;
+                }
+                let force0 = 0.5 * rb0.get_mass() * rb0.get_vel().length_squared();
+                let dist0 = (rb0.get_pos() - rb1.get_pos()).normalize();
+                let force1 = 0.5 * rb1.get_mass() * rb1.get_vel().length_squared();
+                let dist1 = (rb1.get_pos() - rb0.get_pos()).normalize();
+
+                let vel0 = rb0.get_vel() + force0 * dist0 - force1 * dist1;
+                /*
+                let distance_between_balls = self.pos.distance(rb.get_pos());
+                if distance_between_balls > self.radius + rb.get_radius() {
+                    continue;
+                }
+                let force = 0.5 * self.mass * self.vel.length_squared();
+                let dist = (self.pos - rb.get_pos()).normalize();
+                let force1 = 0.5 * rb.get_mass() * rb.get_vel().length_squared();
+                let dist1 = (rb.get_pos() - self.pos).normalize();
+
+                let vel = self.vel + force * dist - force1 * dist1;
+                let new_pos = self.pos + vel * delta_t;
+
+                if new_pos.distance(rb.get_pos()) < self.radius + rb.get_radius() {
+                    //pr("off");
+                    next_pos -= self.vel * delta_t
+                } else {
+                    self.vel += vel * delta_t * 0.1;
+                }
+                 */
+            }
+        }
+    }
+
+    fn update_based_on_ui(&mut self) {
         egui_macroquad::ui(|egui_ctx| {
             egui::Window::new("Physics Engine").show(egui_ctx, |ui| {
                 ui.set_max_width(190.);
@@ -65,7 +118,7 @@ impl Engine {
                     }
                     ui.checkbox(&mut self.pause, "pause");
                 });
-                
+
                 ui.label(format!("World size: {} m", self.world_size));
                 ui.horizontal(|ui| {
                     if ui.button("Reset everything").clicked() {
@@ -80,16 +133,14 @@ impl Engine {
                 ui.heading("Variables").on_hover_text(
                     "Variables used in equations to deduce the forces applied to each rigidbody",
                 );
-
                 self.vars.update_ui(ui, self.scene);
             });
             for i in 0..self.rigid_bodies.len() {
-                self.rigid_bodies[i].update_ui(egui_ctx, i + 1);
+                self.rigid_bodies[i].update_based_on_ui(egui_ctx, i + 1);
             }
         });
     }
 }
-
 
 #[derive(Debug, Clone, Copy)]
 pub struct Variables {

@@ -8,11 +8,22 @@ pub type RigidBodies = Vec<Box<dyn RigidBody>>;
 
 const DIGITS_AFTER_DECIMAL: usize = 0;
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum RigidBodyType {
+    RigidSquare,
+    RigidBall,
+}
+
 pub trait RigidBody: DynClone {
     fn apply_forces(&mut self, vars: Variables, time_mult: f32, rigid_bodies: &RigidBodies);
     fn draw(&self);
-    fn update_ui(&mut self, egui_ctx: &Context, index: usize);
+    fn update_based_on_ui(&mut self, egui_ctx: &Context, index: usize);
+    fn get_type(&self) -> RigidBodyType;
     fn get_enabled(&self) -> bool;
+    fn get_pos(&self) -> Vec2;
+    fn get_vel(&self) -> Vec2;
+    fn get_mass(&self) -> f32;
+    fn get_radius(&self) -> f32;
 }
 
 #[derive(Debug, Clone, Copy)]
