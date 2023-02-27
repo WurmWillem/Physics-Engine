@@ -29,7 +29,7 @@ impl BouncingBall {
             mass,
             radius,
             pos,
-            vel: Vec2::ZERO,
+            vel: vec2(5., 0.),
             forces,
             default_pos: pos,
             default_mass: mass,
@@ -74,7 +74,15 @@ impl RigidBody for BouncingBall {
         } else if next_pos.y - self.radius - 1. < 0. {
             self.vel.y *= -1.;
             self.pos.y = self.radius + 1.;
-        } else {
+        } else if next_pos.x + self.radius > WORLD_SIZE.x {
+            self.vel.x *= -1.;
+            self.pos.x = WORLD_SIZE.x - self.radius;
+
+        } else if next_pos.x - self.radius < 0. {
+            self.vel.x *= -1.;
+            self.pos.x = self.radius;
+        }
+        else {
             self.pos = next_pos;
         }
         self.forces.f_res = f_res;

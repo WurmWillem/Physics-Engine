@@ -1,3 +1,5 @@
+use std::ops::RangeInclusive;
+
 use macroquad::prelude::*;
 
 use crate::{
@@ -36,8 +38,8 @@ impl Scene {
             Scene::BouncingBall => {
                 let radius_0 = 0.5;
                 let radius_1 = 1.;
-                let pos0 = vec2(world_size.x * 0.4, world_size.y * 0.5 + radius_0);
-                let pos1 = vec2(world_size.x * 0.6, world_size.y * 0.5 + radius_1);
+                let pos0 = vec2(world_size.x * 0.4, world_size.y * 0.8 + radius_0);
+                let pos1 = vec2(world_size.x * 0.6, world_size.y * 0.8 + radius_1);
 
                 let rc0 = BouncingBall::new(1., pos0, radius_0);
                 let rc1 = BouncingBall::new(10., pos1, radius_1);
@@ -58,13 +60,25 @@ impl Scene {
                 c: Some(1.),
             },
             Scene::BouncingBall => Variables {
-                g: Some(0.),
+                g: Some(9.81),
                 c: Some(0.1),
             },
         }
     }
+    pub fn get_c_range(&self) -> RangeInclusive<f32> {
+        match self {
+            Scene::FallingSquares => (-1.)..=30.,
+            Scene::BouncingBall => (-0.01)..=1.
+        }
+    }
+    pub fn get_c_default(&self) -> f32 {
+        match self {
+            Scene::FallingSquares => 1.,
+            Scene::BouncingBall => 0.1
+        }
+    }
     pub fn draw_background(&self) {
-        if *self == Scene::FallingSquares || *self == Scene::BouncingBall {
+        //if *self == Scene::FallingSquares || *self == Scene::BouncingBall {
             let world_size = self.get_world_size();
             let metre_in_pixels = SCREEN_SIZE / world_size;
             for x in 0..=(world_size.x as usize) {
@@ -95,6 +109,6 @@ impl Scene {
                 metre_in_pixels.y * 2.,
                 BROWN,
             )
-        }
+        //}
     }
 }

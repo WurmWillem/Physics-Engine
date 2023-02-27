@@ -81,7 +81,7 @@ impl Engine {
                     "Variables used in equations to deduce the forces applied to each rigidbody",
                 );
 
-                self.vars.update_ui(ui);
+                self.vars.update_ui(ui, self.scene);
             });
             for i in 0..self.rigid_bodies.len() {
                 self.rigid_bodies[i].update_ui(egui_ctx, i + 1);
@@ -97,7 +97,7 @@ pub struct Variables {
     pub c: Option<f32>,
 }
 impl Variables {
-    pub fn update_ui(&mut self, ui: &mut Ui) {
+    pub fn update_ui(&mut self, ui: &mut Ui, scene: Scene) {
         if let Some(mut g) = self.g {
             ui.horizontal(|ui| {
                 ui.label("g:").on_hover_text("Acceleration due to gravity");
@@ -119,11 +119,11 @@ impl Variables {
             ui.horizontal(|ui| {
                 ui.label("c:")
                     .on_hover_text("Multiplier for the air resistance");
-                ui.add(egui::Slider::new(&mut c, (-1.)..=30.));
+                ui.add(egui::Slider::new(&mut c, scene.get_c_range()));
             });
             ui.horizontal(|ui| {
                 if ui.button("Reset to default").clicked() {
-                    c = 1.;
+                    c = scene.get_c_default();
                 }
                 if ui.button("Reset to 0").clicked() {
                     c = 0.;
