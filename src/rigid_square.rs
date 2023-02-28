@@ -148,4 +148,7 @@ impl RigidBody for RigidSquare {
     fn get_radius(&self) -> f32 {
         panic!("rigid_square does not have property radius")
     }
+    fn set_vel(&mut self, new_vel: Vec2) {
+        self.vel = new_vel;
+    }
 }

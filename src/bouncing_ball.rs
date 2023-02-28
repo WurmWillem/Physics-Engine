@@ -177,4 +177,7 @@ impl RigidBody for BouncingBall {
     fn get_radius(&self) -> f32 {
         self.radius
     }
+    fn set_vel(&mut self, new_vel: Vec2) {
+        self.vel = new_vel;
+    }
 }

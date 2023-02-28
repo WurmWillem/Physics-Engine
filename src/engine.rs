@@ -2,7 +2,6 @@ use egui_macroquad::egui::{self, Ui};
 use macroquad::prelude::*;
 
 use crate::{
-    pr,
     rigid_body::{RigidBodies, RigidBodyType},
     scenes::Scene,
 };
@@ -39,7 +38,7 @@ impl Engine {
             });
         }
 
-        self.resolve_collisions();
+        //self.resolve_collisions();
     }
     pub fn draw(&self) {
         self.scene.draw_background();
@@ -73,6 +72,10 @@ impl Engine {
                 let dist1 = (rb1.get_pos() - rb0.get_pos()).normalize();
 
                 let vel0 = rb0.get_vel() + force0 * dist0 - force1 * dist1;
+                let vel1 = rb1.get_vel() + force1 * dist1 - force0 * dist0;
+
+                self.rigid_bodies[j].set_vel(vel0);
+                self.rigid_bodies[i].set_vel(vel1);
                 /*
                 let distance_between_balls = self.pos.distance(rb.get_pos());
                 if distance_between_balls > self.radius + rb.get_radius() {

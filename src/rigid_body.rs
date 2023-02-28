@@ -24,6 +24,7 @@ pub trait RigidBody: DynClone {
     fn get_vel(&self) -> Vec2;
     fn get_mass(&self) -> f32;
     fn get_radius(&self) -> f32;
+    fn set_vel(&mut self, new_vel: Vec2);
 }
 
 #[derive(Debug, Clone, Copy)]
