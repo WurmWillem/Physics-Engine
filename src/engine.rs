@@ -6,34 +6,40 @@ use crate::{
     scenes::Scene,
 };
 
+const TIME_INCREMENT: f32 = 0.1;
+
 pub struct Engine {
     scene: Scene,
     rigid_bodies: RigidBodies,
-    time_mult: f32,
-    pause: bool,
     world_size: Vec2,
     vars: Variables,
+    time_mult: f32,
+    pause: bool,
+    time_step_mode_enabled: bool,
+    time_passed: f32,
 }
 impl Engine {
     pub fn new(scene: Scene) -> Self {
         Self {
             scene,
             rigid_bodies: scene.get_rigid_bodies(),
-            time_mult: 1.,
-            pause: false,
             world_size: scene.get_world_size(),
             vars: scene.get_variables(),
+            time_mult: 1.,
+            pause: false,
+            time_step_mode_enabled: true,
+            time_passed: 0.,
         }
     }
     pub fn update(&mut self) {
         self.update_based_on_ui();
 
         //apply forces on the rigidbodies
-        if !self.pause {
-            let rigid_bodies = clone_rigid_bodies(&self.rigid_bodies);
+        if !self.pause && !self.time_step_mode_enabled {
+            let delta_time = self.time_mult * get_frame_time();
             self.rigid_bodies.iter_mut().for_each(|rb| {
                 if rb.get_enabled() {
-                    rb.apply_forces(self.vars, self.time_mult, &rigid_bodies);
+                    rb.apply_forces(self.vars, delta_time);
                 }
             });
         }
@@ -105,24 +111,20 @@ impl Engine {
             egui::Window::new("Physics Engine").show(egui_ctx, |ui| {
                 ui.set_max_width(190.);
 
-                ui.heading("General");
-                if ui.button("Next scene").clicked() {
-                    *self = Engine::new(self.scene.get_next_scene());
-                }
-                ui.label(format!("FPS: {}", get_fps()));
                 ui.horizontal(|ui| {
-                    ui.label(format!("Time multiplier: "))
-                        .on_hover_text("delta time gets multiplied by this");
-                    ui.add(egui::Slider::new(&mut self.time_mult, (0.)..=2.));
-                });
-                ui.horizontal(|ui| {
-                    if ui.button("Reset to 1").clicked() {
-                        self.time_mult = 1.;
+                    ui.heading("General");
+                    if ui.button("Next scene").clicked() {
+                        *self = Engine::new(self.scene.get_next_scene());
                     }
-                    ui.checkbox(&mut self.pause, "pause");
                 });
 
+                ui.label(format!("FPS: {}", get_fps()));
+                ui.label(format!("time passed: {}", self.time_passed));
                 ui.label(format!("World size: {} m", self.world_size));
+                ui.separator();
+
+                self.update_time(ui);
+
                 ui.horizontal(|ui| {
                     if ui.button("Reset everything").clicked() {
                         *self = Engine::new(self.scene);
@@ -143,6 +145,43 @@ impl Engine {
             }
         });
     }
+
+    fn update_time(&mut self, ui: &mut Ui) {
+        ui.checkbox(&mut self.time_step_mode_enabled, "time step mode enabled");
+        if self.time_step_mode_enabled {
+            ui.horizontal(|ui| {
+                ui.label("timestep:");
+                self.create_time_step_button(ui, "Next", TIME_INCREMENT);
+                if self.time_passed - TIME_INCREMENT >= 0. {
+                    self.create_time_step_button(ui, "Previous", -TIME_INCREMENT);
+                }
+            });
+        } else {
+            ui.horizontal(|ui| {
+                ui.label(format!("Time multiplier: "))
+                    .on_hover_text("delta time gets multiplied by this");
+                ui.add(egui::Slider::new(&mut self.time_mult, (0.)..=2.));
+            });
+            ui.horizontal(|ui| {
+                if ui.button("Reset to 1").clicked() {
+                    self.time_mult = 1.;
+                }
+                ui.checkbox(&mut self.pause, "pause");
+            });
+            self.time_passed += get_frame_time();
+        }
+    }
+
+    fn create_time_step_button(&mut self, ui: &mut Ui, title: &str, increment: f32) {
+        if ui.button(title).clicked() {
+            self.time_passed += increment;
+            self.rigid_bodies.iter_mut().for_each(|rb| {
+                if rb.get_enabled() {
+                    rb.apply_forces(self.vars, increment);
+                }
+            });
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -157,14 +196,7 @@ impl Variables {
                 ui.label("g:").on_hover_text("Acceleration due to gravity");
                 ui.add(egui::Slider::new(&mut g, (-30.)..=30.));
             });
-            ui.horizontal(|ui| {
-                if ui.button("Reset to default").clicked() {
-                    g = 9.81;
-                }
-                if ui.button("Reset to 0").clicked() {
-                    g = 0.;
-                }
-            });
+            self.create_reset_buttons(ui, &mut g, 9.81);
             self.g = Some(g);
         }
 
@@ -175,24 +207,18 @@ impl Variables {
                     .on_hover_text("Multiplier for the air resistance");
                 ui.add(egui::Slider::new(&mut c, scene.get_c_range()));
             });
-            ui.horizontal(|ui| {
-                if ui.button("Reset to default").clicked() {
-                    c = scene.get_c_default();
-                }
-                if ui.button("Reset to 0").clicked() {
-                    c = 0.;
-                }
-            });
+            self.create_reset_buttons(ui, &mut c, scene.get_c_default());
             self.c = Some(c);
         }
     }
-}
-
-fn clone_rigid_bodies(v: &RigidBodies) -> RigidBodies {
-    let mut rigid_bodies = Vec::new();
-    for i in 0..v.len() {
-        let rb = dyn_clone::clone_box(&*v[i]);
-        rigid_bodies.push(rb);
+    fn create_reset_buttons(&self, ui: &mut Ui, var: &mut f32, default: f32) {
+        ui.horizontal(|ui| {
+            if ui.button("Reset to default").clicked() {
+                *var = default;
+            }
+            if ui.button("Reset to 0").clicked() {
+                *var = 0.;
+            }
+        });
     }
-    rigid_bodies
 }

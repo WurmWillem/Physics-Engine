@@ -3,7 +3,7 @@ use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
 use crate::{
-    rigid_body::{Forces, Format, RigidBodies, RigidBody},
+    rigid_body::{Forces, Format, RigidBody},
     SCREEN_SIZE,
 };
 
@@ -37,9 +37,7 @@ impl BouncingBall {
     }
 }
 impl RigidBody for BouncingBall {
-    fn apply_forces(&mut self, vars: Variables, time_mult: f32, _rigid_bodies: &RigidBodies) {
-        let delta_t = get_frame_time() * time_mult;
-
+    fn apply_forces(&mut self, vars: Variables, delta_time: f32) {
         let g = match vars.g {
             Some(g_) => g_,
             None => panic!("g is None"),
@@ -63,35 +61,10 @@ impl RigidBody for BouncingBall {
         let acc = f_res / self.mass;
 
         //v = u + a * dt
-        self.vel += acc * delta_t;
+        self.vel += acc * delta_time;
 
         //p = p + v * dt
-        let next_pos = self.pos + self.vel * delta_t;
-
-        /*for rb in rigid_bodies {
-            if rb.get_pos() == self.pos || rb.get_type() != RigidBodyType::RigidBall {
-                continue;
-            }
-
-            let distance_between_balls = self.pos.distance(rb.get_pos());
-            if distance_between_balls > self.radius + rb.get_radius() {
-                continue;
-            }
-            let force = 0.5 * self.mass * self.vel.length_squared();
-            let dist = (self.pos - rb.get_pos()).normalize();
-            let force1 = 0.5 * rb.get_mass() * rb.get_vel().length_squared();
-            let dist1 = (rb.get_pos() - self.pos).normalize();
-
-            let vel = self.vel + force * dist - force1 * dist1;
-            let new_pos = self.pos + vel * delta_t;
-
-            if new_pos.distance(rb.get_pos()) < self.radius + rb.get_radius() {
-                //pr("off");
-                next_pos -= self.vel * delta_t
-            } else {
-                self.vel += vel * delta_t * 0.1;
-            }
-        }*/
+        let next_pos = self.pos + self.vel * delta_time;
 
         if next_pos.y + self.radius > WORLD_SIZE.y {
             self.vel.y *= -1.;

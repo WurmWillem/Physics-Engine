@@ -1,4 +1,3 @@
-use dyn_clone::DynClone;
 use egui_macroquad::egui::{Context, Ui};
 use macroquad::prelude::{vec2, Vec2};
 
@@ -14,8 +13,8 @@ pub enum RigidBodyType {
     RigidBall,
 }
 
-pub trait RigidBody: DynClone {
-    fn apply_forces(&mut self, vars: Variables, time_mult: f32, rigid_bodies: &RigidBodies);
+pub trait RigidBody {
+    fn apply_forces(&mut self, vars: Variables, delta_time: f32);
     fn draw(&self);
     fn update_based_on_ui(&mut self, egui_ctx: &Context, index: usize);
     fn get_type(&self) -> RigidBodyType;

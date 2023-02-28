@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 
 use crate::{
     engine::Variables,
-    rigid_body::{Forces, Format, RigidBodies, RigidBody, RigidBodyType},
+    rigid_body::{Forces, Format, RigidBody, RigidBodyType},
     SCREEN_SIZE,
 };
 use macroquad::math::Vec2;
@@ -38,9 +38,7 @@ impl RigidSquare {
     }
 }
 impl RigidBody for RigidSquare {
-    fn apply_forces(&mut self, vars: Variables, time_mult: f32, _rigid_bodies: &RigidBodies) {
-        let delta_t = get_frame_time() * time_mult;
-
+    fn apply_forces(&mut self, vars: Variables, delta_time: f32) {
         let g = match vars.g {
             Some(g_) => g_,
             None => panic!("g is None"),
@@ -64,10 +62,10 @@ impl RigidBody for RigidSquare {
         let acc = f_res / self.mass;
 
         //v = u + a * dt
-        self.vel += acc * delta_t;
+        self.vel += acc * delta_time;
 
         //p = p + v * dt
-        let next_pos = self.pos + self.vel * delta_t;
+        let next_pos = self.pos + self.vel * delta_time;
 
         if next_pos.y > WORLD_SIZE.y {
             self.vel.y = 0.;
