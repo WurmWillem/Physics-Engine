@@ -5,7 +5,7 @@ use crate::engine::Variables;
 
 pub type RigidBodies = Vec<Box<dyn RigidBody>>;
 
-const DIGITS_AFTER_DECIMAL: usize = 2;
+const DIGITS_AFTER_DECIMAL: usize = 0;
 
 pub trait RigidBody {
     fn apply_forces(&mut self, vars: Variables, delta_time: f32);
@@ -99,11 +99,8 @@ pub trait Format {
 }
 impl Format for f32 {
     fn format(&self, digits_after_decimal: usize) -> Self {
-        if digits_after_decimal == 0 {
-            return self.round()
-        }
-        let f = *self * (digits_after_decimal * 10) as f32;
-        f.round() / (digits_after_decimal * 10) as f32
+        let f = *self * (10 as usize).pow(digits_after_decimal as u32) as f32; 
+        f.round() / (10 as usize).pow(digits_after_decimal as u32) as f32
     }
 }
 impl Format for Vec2 {

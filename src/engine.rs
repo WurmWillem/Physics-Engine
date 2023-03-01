@@ -125,7 +125,7 @@ impl Engine {
                 });
 
                 ui.label(format!("FPS: {}", get_fps()));
-                ui.label(format!("time passed: {}", self.time_passed.format(1)));
+                ui.label(format!("time passed: {}", self.time_passed.format(2)));
                 ui.label(format!("World size: {} m", self.world_size));
                 ui.separator();
 
