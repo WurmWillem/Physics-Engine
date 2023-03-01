@@ -2,8 +2,9 @@ use egui_macroquad::egui::{self, Ui};
 use macroquad::prelude::*;
 
 use crate::{
-    rigid_body::{RigidBodies, RigidBodyType},
-    scenes::Scene, pr,
+    pr,
+    rigid_body::{RigidBodies, RigidBodyType, Format},
+    scenes::Scene,
 };
 
 const TIME_INCREMENT: f32 = 0.1;
@@ -124,7 +125,7 @@ impl Engine {
                 });
 
                 ui.label(format!("FPS: {}", get_fps()));
-                ui.label(format!("time passed: {}", self.time_passed));
+                ui.label(format!("time passed: {}", self.time_passed.format(1)));
                 ui.label(format!("World size: {} m", self.world_size));
                 ui.separator();
 

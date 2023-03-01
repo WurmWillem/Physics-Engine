@@ -1,17 +1,11 @@
-use egui_macroquad::egui::{Context, Ui, self};
+use egui_macroquad::egui::{self, Context, Ui};
 use macroquad::prelude::{vec2, Vec2};
 
 use crate::engine::Variables;
 
 pub type RigidBodies = Vec<Box<dyn RigidBody>>;
 
-const DIGITS_AFTER_DECIMAL: usize = 0;
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum RigidBodyType {
-    RigidSquare,
-    RigidBall,
-}
+const DIGITS_AFTER_DECIMAL: usize = 2;
 
 pub trait RigidBody {
     fn apply_forces(&mut self, vars: Variables, delta_time: f32);
@@ -33,18 +27,30 @@ pub trait RigidBody {
             ui.label("kg");
         });
         ui.horizontal(|ui| {
-            ui.label(format!("Velocity: {} m/s", self.get_vel().format()));
+            ui.label(format!(
+                "Velocity: {} m/s",
+                self.get_vel().format(DIGITS_AFTER_DECIMAL)
+            ));
             if ui.button("Reset").clicked() {
                 self.set_vel(Vec2::ZERO);
             }
         });
         ui.horizontal(|ui| {
-            ui.label(format!("Position: {} m", self.get_pos().format()));
+            ui.label(format!(
+                "Position: {} m",
+                self.get_pos().format(DIGITS_AFTER_DECIMAL)
+            ));
             if ui.button("Reset").clicked() {
                 self.set_pos(default_pos);
             }
         });
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum RigidBodyType {
+    RigidSquare,
+    RigidBall,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -67,18 +73,21 @@ impl Forces {
         ui.collapsing("Show forces", |ui| {
             ui.label(format!(
                 "F_res = {} = {} N",
-                self.f_res.format(),
-                self.f_res.length().format()
+                self.f_res.format(DIGITS_AFTER_DECIMAL),
+                self.f_res.length().format(DIGITS_AFTER_DECIMAL)
             ));
             if let Some(f_g) = self.f_g {
-                ui.label(format!("Gravity: m * g = {} N", f_g.format()));
+                ui.label(format!(
+                    "Gravity: m * g = {} N",
+                    f_g.format(DIGITS_AFTER_DECIMAL)
+                ));
             }
             if let Some(f_air) = self.f_air {
                 ui.label("Air resistance: c * A * v*v =");
                 ui.label(format!(
                     "{} = {} N",
-                    f_air.format(),
-                    f_air.length().format()
+                    f_air.format(DIGITS_AFTER_DECIMAL),
+                    f_air.length().format(DIGITS_AFTER_DECIMAL)
                 ));
             }
         });
@@ -86,16 +95,22 @@ impl Forces {
 }
 
 pub trait Format {
-    fn format(&self) -> Self;
+    fn format(&self, digits_after_decimal: usize) -> Self;
 }
 impl Format for f32 {
-    fn format(&self) -> Self {
-        let f = *self * (DIGITS_AFTER_DECIMAL + 1) as f32;
-        f.round() / (DIGITS_AFTER_DECIMAL + 1) as f32
+    fn format(&self, digits_after_decimal: usize) -> Self {
+        if digits_after_decimal == 0 {
+            return self.round()
+        }
+        let f = *self * (digits_after_decimal * 10) as f32;
+        f.round() / (digits_after_decimal * 10) as f32
     }
 }
 impl Format for Vec2 {
-    fn format(&self) -> Self {
-        vec2(self.x.format(), self.y.format())
+    fn format(&self, digits_after_decimal: usize) -> Self {
+        vec2(
+            self.x.format(digits_after_decimal),
+            self.y.format(digits_after_decimal),
+        )
     }
 }

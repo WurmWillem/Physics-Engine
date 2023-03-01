@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 
 use crate::{
     engine::Variables,
-    rigid_body::{Forces, Format, RigidBody, RigidBodyType},
+    rigid_body::{Forces, RigidBody, RigidBodyType},
     SCREEN_SIZE,
 };
 use macroquad::math::Vec2;

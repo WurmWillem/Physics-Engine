@@ -3,7 +3,7 @@ use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
 
 use crate::{
-    rigid_body::{Forces, Format, RigidBody},
+    rigid_body::{Forces, RigidBody},
     SCREEN_SIZE,
 };
 
