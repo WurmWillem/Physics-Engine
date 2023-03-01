@@ -40,6 +40,8 @@ impl Scene {
                 let radius_1 = 1. * 5.;
                 let pos0 = vec2(world_size.x * 0.4, world_size.y * 0.8 + radius_0);
                 let pos1 = vec2(world_size.x * 0.6, world_size.y * 0.8 + radius_1);
+                //let pos0 = vec2(world_size.x * 0.4, radius_0 + 1.);
+                //let pos1 = vec2(world_size.x * 0.6, radius_1 + 1.);
 
                 let rc0 = BouncingBall::new(1., pos0, radius_0);
                 let rc1 = BouncingBall::new(10., pos1, radius_1);
@@ -78,9 +80,9 @@ impl Scene {
         }
     }
     pub fn draw_background(&self) {
-        //if *self == Scene::FallingSquares || *self == Scene::BouncingBall {
         let world_size = self.get_world_size();
         let metre_in_pixels = SCREEN_SIZE / world_size;
+
         for x in 0..=(world_size.x as usize) {
             draw_line(
                 x as f32 * metre_in_pixels.x,
@@ -109,6 +111,5 @@ impl Scene {
             metre_in_pixels.y * 2.,
             BROWN,
         )
-        //}
     }
 }

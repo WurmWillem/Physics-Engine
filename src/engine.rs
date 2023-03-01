@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 
 use crate::{
     rigid_body::{RigidBodies, RigidBodyType},
-    scenes::Scene,
+    scenes::Scene, pr,
 };
 
 const TIME_INCREMENT: f32 = 0.1;
@@ -27,7 +27,7 @@ impl Engine {
             vars: scene.get_variables(),
             time_mult: 1.,
             pause: false,
-            time_step_mode_enabled: true,
+            time_step_mode_enabled: false,
             time_passed: 0.,
         }
     }
@@ -44,7 +44,7 @@ impl Engine {
             });
         }
 
-        //self.resolve_collisions();
+        self.resolve_collisions();
     }
     pub fn draw(&self) {
         self.scene.draw_background();
@@ -77,11 +77,16 @@ impl Engine {
                 let force1 = 0.5 * rb1.get_mass() * rb1.get_vel().length_squared();
                 let dist1 = (rb1.get_pos() - rb0.get_pos()).normalize();
 
-                let vel0 = rb0.get_vel() + force0 * dist0 - force1 * dist1;
-                let vel1 = rb1.get_vel() + force1 * dist1 - force0 * dist0;
+                let vel0 = force0 * dist0 - force1 * dist1;
+                let vel1 = force1 * dist1 - force0 * dist0;
 
-                self.rigid_bodies[j].set_vel(vel0);
-                self.rigid_bodies[i].set_vel(vel1);
+                //pr(force0 * dist0 - force1 * dist1);
+                //pr(force1 * dist1 - force0 * dist0);
+
+                self.rigid_bodies[j].set_vel(vel0 * 0.01);
+                self.rigid_bodies[i].set_vel(vel1 * 0.01);
+
+                return;
                 /*
                 let distance_between_balls = self.pos.distance(rb.get_pos());
                 if distance_between_balls > self.radius + rb.get_radius() {
@@ -134,12 +139,9 @@ impl Engine {
                     }
                 });
 
-                ui.separator();
-                ui.heading("Variables").on_hover_text(
-                    "Variables used in equations to deduce the forces applied to each rigidbody",
-                );
                 self.vars.update_ui(ui, self.scene);
             });
+
             for i in 0..self.rigid_bodies.len() {
                 self.rigid_bodies[i].update_based_on_ui(egui_ctx, i + 1);
             }
@@ -160,7 +162,7 @@ impl Engine {
             ui.horizontal(|ui| {
                 ui.label(format!("Time multiplier: "))
                     .on_hover_text("delta time gets multiplied by this");
-                ui.add(egui::Slider::new(&mut self.time_mult, (0.)..=2.));
+                ui.add(egui::Slider::new(&mut self.time_mult, (0.)..=10.));
             });
             ui.horizontal(|ui| {
                 if ui.button("Reset to 1").clicked() {
@@ -191,6 +193,11 @@ pub struct Variables {
 }
 impl Variables {
     pub fn update_ui(&mut self, ui: &mut Ui, scene: Scene) {
+        ui.separator();
+        ui.heading("Variables").on_hover_text(
+            "Variables used in equations to deduce the forces applied to each rigidbody",
+        );
+
         if let Some(mut g) = self.g {
             ui.horizontal(|ui| {
                 ui.label("g:").on_hover_text("Acceleration due to gravity");
@@ -211,6 +218,7 @@ impl Variables {
             self.c = Some(c);
         }
     }
+
     fn create_reset_buttons(&self, ui: &mut Ui, var: &mut f32, default: f32) {
         ui.horizontal(|ui| {
             if ui.button("Reset to default").clicked() {

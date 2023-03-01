@@ -85,6 +85,7 @@ impl RigidBody for BouncingBall {
         self.forces.f_g = Some(f_g);
         self.forces.f_air = Some(f_air);
     }
+
     fn draw(&self) {
         draw_circle(
             self.pos.x * METRE_IN_PIXELS.x,
@@ -93,6 +94,7 @@ impl RigidBody for BouncingBall {
             RED,
         )
     }
+
     fn update_based_on_ui(&mut self, egui_ctx: &Context, index: usize) {
         egui::Window::new(format!("Bouncing ball {index}")).show(egui_ctx, |ui| {
             ui.set_max_width(200.);
@@ -107,26 +109,11 @@ impl RigidBody for BouncingBall {
 
                 ui.collapsing("Show data", |ui| {
                     ui.heading("Data");
-                    ui.horizontal(|ui| {
-                        ui.label("Mass:");
-                        ui.add(egui::Slider::new(&mut self.mass, (0.1)..=30.));
-                        ui.label("kg");
-                    });
-
                     ui.label(format!("Radius: {} m", self.radius));
-                    ui.horizontal(|ui| {
-                        ui.label(format!("Velocity: {} m/s", self.vel.format()));
-                        if ui.button("Reset").clicked() {
-                            self.vel = Vec2::ZERO;
-                        }
-                    });
 
-                    ui.horizontal(|ui| {
-                        ui.label(format!("Position: {} m", self.pos.format()));
-                        if ui.button("Reset").clicked() {
-                            self.pos = self.default_pos;
-                        }
-                    });
+                    let mut mass_copy = self.mass;
+                    self.update_default_properties_ui(ui, &mut mass_copy, self.default_pos);
+                    self.mass = mass_copy;
                 });
                 self.forces.display_ui(ui);
             });
@@ -152,5 +139,8 @@ impl RigidBody for BouncingBall {
     }
     fn set_vel(&mut self, new_vel: Vec2) {
         self.vel = new_vel;
+    }
+    fn set_pos(&mut self, new_pos: Vec2) {
+        self.pos = new_pos;
     }
 }

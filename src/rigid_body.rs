@@ -1,4 +1,4 @@
-use egui_macroquad::egui::{Context, Ui};
+use egui_macroquad::egui::{Context, Ui, self};
 use macroquad::prelude::{vec2, Vec2};
 
 use crate::engine::Variables;
@@ -24,6 +24,27 @@ pub trait RigidBody {
     fn get_mass(&self) -> f32;
     fn get_radius(&self) -> f32;
     fn set_vel(&mut self, new_vel: Vec2);
+    fn set_pos(&mut self, new_pos: Vec2);
+
+    fn update_default_properties_ui(&mut self, ui: &mut Ui, mass: &mut f32, default_pos: Vec2) {
+        ui.horizontal(|ui| {
+            ui.label("Mass:");
+            ui.add(egui::Slider::new(mass, (0.1)..=300.));
+            ui.label("kg");
+        });
+        ui.horizontal(|ui| {
+            ui.label(format!("Velocity: {} m/s", self.get_vel().format()));
+            if ui.button("Reset").clicked() {
+                self.set_vel(Vec2::ZERO);
+            }
+        });
+        ui.horizontal(|ui| {
+            ui.label(format!("Position: {} m", self.get_pos().format()));
+            if ui.button("Reset").clicked() {
+                self.set_pos(default_pos);
+            }
+        });
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

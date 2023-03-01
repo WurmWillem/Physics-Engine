@@ -104,26 +104,11 @@ impl RigidBody for RigidSquare {
             });
 
             ui.collapsing("Show data", |ui| {
-                ui.horizontal(|ui| {
-                    ui.label("Mass:");
-                    ui.add(egui::Slider::new(&mut self.mass, (0.1)..=300.));
-                    ui.label("kg");
-                });
-
                 ui.label(format!("Size: {} m", self.size));
-                ui.horizontal(|ui| {
-                    ui.label(format!("Velocity: {} m/s", self.vel.format()));
-                    if ui.button("Reset").clicked() {
-                        self.vel = Vec2::ZERO;
-                    }
-                });
 
-                ui.horizontal(|ui| {
-                    ui.label(format!("Position: {} m", self.pos.format()));
-                    if ui.button("Reset").clicked() {
-                        self.pos = self.default_pos;
-                    }
-                });
+                let mut mass_copy = self.mass;
+                self.update_default_properties_ui(ui, &mut mass_copy, self.default_pos);
+                self.mass = mass_copy;
             });
             self.forces.display_ui(ui);
         });
@@ -148,5 +133,8 @@ impl RigidBody for RigidSquare {
     }
     fn set_vel(&mut self, new_vel: Vec2) {
         self.vel = new_vel;
+    }
+    fn set_pos(&mut self, new_pos: Vec2) {
+        self.pos = new_pos;
     }
 }
