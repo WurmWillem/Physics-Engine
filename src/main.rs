@@ -5,6 +5,7 @@ mod engine;
 mod rigid_body;
 mod rigid_square;
 mod scenes;
+mod spring;
 
 use engine::Engine;
 use scenes::Scene;
@@ -15,7 +16,7 @@ pub const SCREEN_SIZE: Vec2 = vec2(800., 700.);
 async fn main() {
     request_new_screen_size(SCREEN_SIZE.x, SCREEN_SIZE.y);
 
-    let mut engine = Engine::new(Scene::BouncingBall);
+    let mut engine = Engine::new(Scene::Spring);
 
     loop {
         clear_background(LIGHTGRAY);
