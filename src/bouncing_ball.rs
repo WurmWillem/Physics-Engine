@@ -24,7 +24,7 @@ pub struct BouncingBall {
 }
 impl BouncingBall {
     pub fn new(mass: f32, pos: Vec2, radius: f32) -> Self {
-        let forces = Forces::new(true, true);
+        let forces = Forces::new(true, true, false);
         Self {
             enabled: true,
             mass,

@@ -1,9 +1,9 @@
+use egui_macroquad::egui;
 use macroquad::prelude::*;
 
 use crate::{
     engine::Variables,
-    pr,
-    rigid_body::{RigidBody, RigidBodyType},
+    rigid_body::{Forces, RigidBody, RigidBodyType},
     SCREEN_SIZE,
 };
 
@@ -20,19 +20,27 @@ pub struct Spring {
     c: f32,
     u: f32,
     clicked: bool,
+    forces: Forces,
+    default_mass: f32,
+    default_pos: Vec2,
+    default_size: Vec2,
 }
 impl Spring {
-    pub fn new(mass: f32, pos: Vec2) -> Self {
+    pub fn new(mass: f32, pos: Vec2, size: Vec2) -> Self {
         Self {
             enabled: true,
             mass,
             pos,
             vel: Vec2::ZERO,
-            size: vec2(30., 3.),
+            size,
             equilibrium: pos.y,
-            c: 10.,
+            c: 5.,
             u: 0.,
             clicked: false,
+            forces: Forces::new(false, false, true),
+            default_mass: mass,
+            default_pos: pos,
+            default_size: size,
         }
     }
 }
@@ -50,14 +58,18 @@ impl RigidBody for Spring {
         }
         if self.clicked {
             let mouse_y = WORLD_SIZE.y - (mouse_position_local().y + 1.) * 0.5 * WORLD_SIZE.y;
-            self.pos.y = mouse_y;
+            if mouse_y > 5. && mouse_y < self.equilibrium * 2. - 5. {
+                self.pos.y = mouse_y;
+            }
         }
         self.u = self.equilibrium - self.pos.y;
 
         let mut f_res = Vec2::ZERO;
 
-        //F_spring = c * u
-        f_res.y += self.c * self.u;
+        if !self.clicked {
+            //F_spring = c * u
+            f_res.y += self.c * self.u;
+        }
 
         //a = f / m
         let acc = f_res / self.mass;
@@ -68,10 +80,12 @@ impl RigidBody for Spring {
         //p = p + v * dt
         let next_pos = self.pos + self.vel * delta_time;
 
-        //if next_pos.y - self.size.y > 0. && next_pos.y < WORLD_SIZE.y {
         self.pos = next_pos;
-        //}
+
+        self.forces.f_res = f_res;
+        self.forces.f_spring = Some(f_res.y);
     }
+
     fn draw(&self) {
         draw_rectangle(
             self.pos.x * METRE_IN_PIXELS.x,
@@ -88,8 +102,44 @@ impl RigidBody for Spring {
             self.size.x * 0.6,
             BLACK,
         );
+        draw_line(
+            (self.pos.x + self.size.x * 0.2) * METRE_IN_PIXELS.x,
+            SCREEN_SIZE.y - METRE_IN_PIXELS.y * 1.5,
+            (self.pos.x + self.size.x * 0.8) * METRE_IN_PIXELS.x,
+            SCREEN_SIZE.y - METRE_IN_PIXELS.y * 1.5,
+            METRE_IN_PIXELS.y,
+            BLACK,
+        );
     }
-    fn update_based_on_ui(&mut self, _egui_ctx: &egui_macroquad::egui::Context, _index: usize) {}
+
+    fn update_based_on_ui(&mut self, egui_ctx: &egui_macroquad::egui::Context, index: usize) {
+        egui::Window::new(format!("Spring {index}")).show(egui_ctx, |ui| {
+            ui.set_max_width(200.);
+
+            ui.horizontal(|ui| {
+                ui.checkbox(&mut self.enabled, "enabled");
+                if ui.button("Reset all").clicked() {
+                    *self = Spring::new(self.default_mass, self.default_pos, self.default_size);
+                }
+            });
+            ui.collapsing("Show data", |ui| {
+                ui.heading("Data");
+                ui.label(format!("Size: {} m", self.size));
+
+                let mut mass_copy = self.mass;
+                self.update_default_properties_ui(ui, &mut mass_copy, self.default_pos);
+                self.mass = mass_copy;
+
+                ui.horizontal(|ui| {
+                    ui.label("c:");
+                    ui.add(egui::Slider::new(&mut self.c, (1.)..=30.));
+                    ui.label("N/m");
+                });
+            });
+
+            self.forces.display_ui(ui);
+        });
+    }
 
     fn get_type(&self) -> RigidBodyType {
         RigidBodyType::Spring
@@ -118,11 +168,6 @@ impl RigidBody for Spring {
 }
 impl Spring {
     fn contains(&self, point: Vec2) -> bool {
-        //pr(self.pos.x);
-        //pr(point);
-        if point.x > self.pos.x {
-            //pr("yeh")
-        }
         point.x > self.pos.x
             && point.x < self.pos.x + self.size.x
             && point.y < self.pos.y

@@ -24,7 +24,7 @@ pub struct RigidSquare {
 }
 impl RigidSquare {
     pub fn new(mass: f32, pos: Vec2, size: Vec2) -> Self {
-        let forces = Forces::new(true, true);
+        let forces = Forces::new(true, true, false);
         Self {
             mass,
             pos,

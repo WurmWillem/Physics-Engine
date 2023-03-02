@@ -49,7 +49,8 @@ impl Scene {
                 vec![Box::new(rc0), Box::new(rc1)]
             }
             Scene::Spring => {
-                let spring = Spring::new(10., vec2(world_size.x * 0.5 - 10., world_size.y * 0.2));
+                let pos = vec2(world_size.x * 0.5 - 10., world_size.y * 0.5);
+                let spring = Spring::new(1., pos, vec2(30., 3.));
                 vec![Box::new(spring)]
             }
         }
@@ -65,7 +66,7 @@ impl Scene {
         match self {
             Scene::FallingSquares => Variables::new(Some(0.), Some(1.)),
             Scene::BouncingBall => Variables::new(Some(9.81), Some(0.)),
-            Scene::Spring => Variables::new(Some(0.), Some(0.)),
+            Scene::Spring => Variables::new(None, None),
         }
     }
     pub fn get_c_range(&self) -> RangeInclusive<f32> {

@@ -172,10 +172,12 @@ impl Variables {
         Variables { g, c }
     }
     pub fn update_ui(&mut self, ui: &mut Ui, scene: Scene) {
-        ui.separator();
-        ui.heading("Variables").on_hover_text(
-            "Variables used in equations to deduce the forces applied to each rigidbody",
-        );
+        if scene != Scene::Spring {
+            ui.separator();
+            ui.heading("Variables").on_hover_text(
+                "Variables used in equations to deduce the forces applied to each rigidbody",
+            );
+        }
 
         if let Some(mut g) = self.g {
             ui.horizontal(|ui| {

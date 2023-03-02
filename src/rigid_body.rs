@@ -59,15 +59,18 @@ pub struct Forces {
     pub f_res: Vec2,
     pub f_g: Option<f32>,
     pub f_air: Option<Vec2>,
+    pub f_spring: Option<f32>,
 }
 impl Forces {
-    pub fn new(f_g_used: bool, f_air_used: bool) -> Self {
+    pub fn new(f_g_used: bool, f_air_used: bool, f_spring_used: bool) -> Self {
         let f_g = if f_g_used { Some(0.) } else { None };
         let f_air = if f_air_used { Some(Vec2::ZERO) } else { None };
+        let f_spring = if f_spring_used { Some(0.) } else { None };
         Self {
             f_res: Vec2::ZERO,
             f_g,
             f_air,
+            f_spring,
         }
     }
     pub fn display_ui(&self, ui: &mut Ui) {
@@ -89,6 +92,12 @@ impl Forces {
                     "{} = {} N",
                     f_air.format(DIGITS_AFTER_DECIMAL),
                     f_air.length().format(DIGITS_AFTER_DECIMAL)
+                ));
+            }
+            if let Some(f_spring) = self.f_spring {
+                ui.label(format!(
+                    "Spring force: c * u = {} N",
+                    f_spring.format(DIGITS_AFTER_DECIMAL)
                 ));
             }
         });
