@@ -2,8 +2,9 @@ use macroquad::prelude::*;
 
 use crate::{
     engine::Variables,
+    pr,
     rigid_body::{RigidBody, RigidBodyType},
-    SCREEN_SIZE, pr,
+    SCREEN_SIZE,
 };
 
 pub const WORLD_SIZE: Vec2 = vec2(60., 52.5);
@@ -15,7 +16,9 @@ pub struct Spring {
     pos: Vec2,
     vel: Vec2,
     size: Vec2,
+    equilibrium: f32,
     c: f32,
+    u: f32,
     clicked: bool,
 }
 impl Spring {
@@ -25,17 +28,19 @@ impl Spring {
             mass,
             pos,
             vel: Vec2::ZERO,
-            size: vec2(30., 3.), //vec2(300., 30.),
-            c: 1.,
+            size: vec2(30., 3.),
+            equilibrium: pos.y,
+            c: 10.,
+            u: 0.,
             clicked: false,
         }
     }
 }
 impl RigidBody for Spring {
-    fn apply_forces(&mut self, _vars: Variables, _delta_time: f32) {
+    fn apply_forces(&mut self, _vars: Variables, delta_time: f32) {
         if is_mouse_button_down(MouseButton::Left) && !self.clicked {
-            let mut mouse_pos = (mouse_position_local() + 1.) * 0.5 * WORLD_SIZE;    
-            mouse_pos.y = WORLD_SIZE.y - mouse_pos.y;  
+            let mut mouse_pos = (mouse_position_local() + 1.) * 0.5 * WORLD_SIZE;
+            mouse_pos.y = WORLD_SIZE.y - mouse_pos.y;
             if self.contains(mouse_pos) {
                 self.clicked = true;
             }
@@ -44,9 +49,28 @@ impl RigidBody for Spring {
             self.clicked = false;
         }
         if self.clicked {
-            let mouse_y = WORLD_SIZE.y - (mouse_position_local().y + 1.) * 0.5 * WORLD_SIZE.y;    
+            let mouse_y = WORLD_SIZE.y - (mouse_position_local().y + 1.) * 0.5 * WORLD_SIZE.y;
             self.pos.y = mouse_y;
         }
+        self.u = self.equilibrium - self.pos.y;
+
+        let mut f_res = Vec2::ZERO;
+
+        //F_spring = c * u
+        f_res.y += self.c * self.u;
+
+        //a = f / m
+        let acc = f_res / self.mass;
+
+        //v = u + a * dt
+        self.vel += acc * delta_time;
+
+        //p = p + v * dt
+        let next_pos = self.pos + self.vel * delta_time;
+
+        //if next_pos.y - self.size.y > 0. && next_pos.y < WORLD_SIZE.y {
+        self.pos = next_pos;
+        //}
     }
     fn draw(&self) {
         draw_rectangle(
@@ -57,11 +81,11 @@ impl RigidBody for Spring {
             BLACK,
         );
         draw_line(
-            (self.pos.x  + self.size.x * 0.5) * METRE_IN_PIXELS.x ,
+            (self.pos.x + self.size.x * 0.5) * METRE_IN_PIXELS.x,
             SCREEN_SIZE.y - self.pos.y * METRE_IN_PIXELS.y,
-            (self.pos.x  + self.size.x * 0.5) * METRE_IN_PIXELS.x,
-            SCREEN_SIZE.y,
-            20.,
+            (self.pos.x + self.size.x * 0.5) * METRE_IN_PIXELS.x,
+            SCREEN_SIZE.y - METRE_IN_PIXELS.y,
+            self.size.x * 0.6,
             BLACK,
         );
     }
