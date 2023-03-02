@@ -1,22 +1,21 @@
 use macroquad::prelude::*;
 
+mod bouncing_ball;
 mod engine;
 mod rigid_body;
+mod rigid_square;
+mod scenes;
 
 use engine::Engine;
+use scenes::Scene;
 
-pub const SCREEN_SIZE: Vec2 = Vec2::new(800., 700.);
-pub const SCREEN_SIZE_METRES: Vec2 = Vec2::new(60., 52.5);
-pub const METRE_IN_PIXELS: Vec2 = Vec2::new(
-    SCREEN_SIZE.x / SCREEN_SIZE_METRES.x,
-    SCREEN_SIZE.y / SCREEN_SIZE_METRES.y,
-);
+pub const SCREEN_SIZE: Vec2 = vec2(800., 700.);
 
 #[macroquad::main("Physics Engine")]
 async fn main() {
     request_new_screen_size(SCREEN_SIZE.x, SCREEN_SIZE.y);
 
-    let mut engine = Engine::new();
+    let mut engine = Engine::new(Scene::BouncingBall);
 
     loop {
         clear_background(LIGHTGRAY);

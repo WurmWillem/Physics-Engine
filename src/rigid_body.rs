@@ -1,149 +1,113 @@
-use egui_macroquad::egui::{self, Context};
-use macroquad::prelude::*;
+use egui_macroquad::egui::{self, Context, Ui};
+use macroquad::prelude::{vec2, Vec2};
 
-use crate::{METRE_IN_PIXELS, SCREEN_SIZE, SCREEN_SIZE_METRES};
+use crate::engine::Variables;
+
+pub type RigidBodies = Vec<Box<dyn RigidBody>>;
 
 const DIGITS_AFTER_DECIMAL: usize = 0;
 
-#[derive(Debug, Clone, Copy)]
-pub struct RigidBody {
-    pub enabled: bool,
-    mass: f32,
-    pos: Vec2,
-    vel: Vec2,
-    size: Vec2,
-    f_res: Vec2,
-    f_g: f32,
-    f_air: Vec2,
-    default_pos: Vec2,
-    default_mass: f32,
-}
-impl RigidBody {
-    pub fn new(mass: f32, pos: Vec2, size: Vec2) -> Self {
-        Self {
-            mass,
-            pos,
-            vel: Vec2::ZERO,
-            size,
-            enabled: true,
-            f_res: Vec2::ZERO,
-            f_g: 0.,
-            f_air: Vec2::ZERO,
-            default_pos: pos,
-            default_mass: mass,
-        }
-    }
-    pub fn apply_forces(&mut self, g: f32, c: f32, time_mult: f32) {
-        let delta_t = get_frame_time() * time_mult;
+pub trait RigidBody {
+    fn apply_forces(&mut self, vars: Variables, delta_time: f32);
+    fn draw(&self);
+    fn update_based_on_ui(&mut self, egui_ctx: &Context, index: usize);
+    fn get_type(&self) -> RigidBodyType;
+    fn get_enabled(&self) -> bool;
+    fn get_pos(&self) -> Vec2;
+    fn get_vel(&self) -> Vec2;
+    fn get_mass(&self) -> f32;
+    fn get_radius(&self) -> f32;
+    fn set_vel(&mut self, new_vel: Vec2);
+    fn set_pos(&mut self, new_pos: Vec2);
 
-        let mut f_res = Vec2::ZERO;
-
-        //Fz = m * g
-        let f_g = g * self.mass;
-        f_res.y -= f_g;
-
-        //F_Air = 0.5 * p * A * v*v = c * A * v*v in our case because k = 0.5 * p
-        let f_air = c * self.size.x * self.vel * self.vel.abs();
-        f_res -= f_air;
-
-        //a = f / m
-        let acc = f_res / self.mass;
-
-        //v = u + a * dt
-        self.vel += acc * delta_t;
-
-        //p = p + v * dt
-        let next_pos = self.pos + self.vel * delta_t;
-
-        if next_pos.y > SCREEN_SIZE_METRES.y {
-            self.vel.y = 0.;
-            self.pos.y = SCREEN_SIZE_METRES.y;
-            f_res = Vec2::ZERO;
-        } else if next_pos.y - self.size.y < 1. {
-            self.vel.y = 0.;
-            self.pos.y = self.size.y + 1.;
-            f_res = Vec2::ZERO;
-        } else {
-            self.pos = next_pos;
-        }
-        self.f_res = f_res;
-        self.f_g = f_g;
-        self.f_air = f_air
-    }
-
-    pub fn draw(&self) {
-        draw_rectangle(
-            self.pos.x * METRE_IN_PIXELS.x,
-            SCREEN_SIZE.y - self.pos.y * METRE_IN_PIXELS.y,
-            self.size.x * METRE_IN_PIXELS.x,
-            self.size.y * METRE_IN_PIXELS.y,
-            RED,
-        );
-    }
-
-    pub fn update_ui(&mut self, egui_ctx: &Context, index: usize) {
-        egui::Window::new(format!("Rigidbody {index}")).show(egui_ctx, |ui| {
-            ui.set_max_width(200.);
-            ui.checkbox(&mut self.enabled, "enabled");
-
-            ui.collapsing("Show", |ui| {
-                ui.heading("Data");
-                ui.horizontal(|ui| {
-                    ui.label("Mass:");
-                    ui.add(egui::Slider::new(&mut self.mass, (0.1)..=300.));
-                    ui.label("kg");
-                });
-
-                ui.label(format!("Size: {} m", self.size));
-                ui.horizontal(|ui| {
-                    ui.label(format!("Velocity: {} m/s", self.vel.format()));
-                    if ui.button("Reset").clicked() {
-                        self.vel = Vec2::ZERO;
-                    }
-                });
-
-                ui.horizontal(|ui| {
-                    ui.label(format!("Position: {} m", self.pos.format()));
-                    if ui.button("Reset").clicked() {
-                        self.pos = self.default_pos;
-                    }
-                });
-                if ui.button("Reset all").clicked() {
-                    *self = RigidBody::new(self.default_mass, self.default_pos, self.size);
-                }
-                ui.separator();
-
-                ui.heading("Forces")
-                    .on_hover_text("Forces that get applied to the rigidbody");
-                ui.label(format!(
-                    "F_res = {} = {} N",
-                    self.f_res.format(),
-                    self.f_res.length().format()
-                ));
-                ui.label(format!("Gravity: m * g = {} N", self.f_g.format()));
-                ui.label("Air resistance: c * A * v*v =");
-                ui.label(format!(
-                    "{} = {} N",
-                    self.f_air.format(),
-                    self.f_air.length().format()
-                ));
-            });
+    fn update_default_properties_ui(&mut self, ui: &mut Ui, mass: &mut f32, default_pos: Vec2) {
+        ui.horizontal(|ui| {
+            ui.label("Mass:");
+            ui.add(egui::Slider::new(mass, (0.1)..=300.));
+            ui.label("kg");
+        });
+        ui.horizontal(|ui| {
+            ui.label(format!(
+                "Velocity: {} m/s",
+                self.get_vel().format(DIGITS_AFTER_DECIMAL)
+            ));
+            if ui.button("Reset").clicked() {
+                self.set_vel(Vec2::ZERO);
+            }
+        });
+        ui.horizontal(|ui| {
+            ui.label(format!(
+                "Position: {} m",
+                self.get_pos().format(DIGITS_AFTER_DECIMAL)
+            ));
+            if ui.button("Reset").clicked() {
+                self.set_pos(default_pos);
+            }
         });
     }
 }
 
-trait Format {
-    fn format(&self) -> Self;
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum RigidBodyType {
+    RigidSquare,
+    RigidBall,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Forces {
+    pub f_res: Vec2,
+    pub f_g: Option<f32>,
+    pub f_air: Option<Vec2>,
+}
+impl Forces {
+    pub fn new(f_g_used: bool, f_air_used: bool) -> Self {
+        let f_g = if f_g_used { Some(0.) } else { None };
+        let f_air = if f_air_used { Some(Vec2::ZERO) } else { None };
+        Self {
+            f_res: Vec2::ZERO,
+            f_g,
+            f_air,
+        }
+    }
+    pub fn display_ui(&self, ui: &mut Ui) {
+        ui.collapsing("Show forces", |ui| {
+            ui.label(format!(
+                "F_res = {} = {} N",
+                self.f_res.format(DIGITS_AFTER_DECIMAL),
+                self.f_res.length().format(DIGITS_AFTER_DECIMAL)
+            ));
+            if let Some(f_g) = self.f_g {
+                ui.label(format!(
+                    "Gravity: m * g = {} N",
+                    f_g.format(DIGITS_AFTER_DECIMAL)
+                ));
+            }
+            if let Some(f_air) = self.f_air {
+                ui.label("Air resistance: c * A * v*v =");
+                ui.label(format!(
+                    "{} = {} N",
+                    f_air.format(DIGITS_AFTER_DECIMAL),
+                    f_air.length().format(DIGITS_AFTER_DECIMAL)
+                ));
+            }
+        });
+    }
+}
+
+pub trait Format {
+    fn format(&self, digits_after_decimal: usize) -> Self;
 }
 impl Format for f32 {
-    fn format(&self) -> Self {
-        let f = *self * (DIGITS_AFTER_DECIMAL + 1) as f32;
-        let f = f as i32 as f32;
-        f / (DIGITS_AFTER_DECIMAL + 1) as f32
+    fn format(&self, digits_after_decimal: usize) -> Self {
+        let f = *self * (10 as usize).pow(digits_after_decimal as u32) as f32;
+        f.round() / (10 as usize).pow(digits_after_decimal as u32) as f32
     }
 }
 impl Format for Vec2 {
-    fn format(&self) -> Self {
-        Vec2::new(self.x.format(), self.y.format())
+    fn format(&self, digits_after_decimal: usize) -> Self {
+        vec2(
+            self.x.format(digits_after_decimal),
+            self.y.format(digits_after_decimal),
+        )
     }
 }
