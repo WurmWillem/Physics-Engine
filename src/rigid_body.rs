@@ -49,8 +49,9 @@ pub trait RigidBody {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RigidBodyType {
-    RigidSquare,
-    RigidBall,
+    Square,
+    Ball,
+    Spring,
 }
 
 #[derive(Debug, Clone, Copy)]

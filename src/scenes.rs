@@ -7,6 +7,7 @@ use crate::{
     engine::Variables,
     rigid_body::RigidBody,
     rigid_square::{self, RigidSquare},
+    spring::{self, Spring},
     SCREEN_SIZE,
 };
 
@@ -14,12 +15,14 @@ use crate::{
 pub enum Scene {
     FallingSquares,
     BouncingBall,
+    Spring,
 }
 impl Scene {
     pub fn get_world_size(&self) -> Vec2 {
         match self {
             Scene::FallingSquares => rigid_square::WORLD_SIZE,
             Scene::BouncingBall => bouncing_ball::WORLD_SIZE,
+            Scene::Spring => spring::WORLD_SIZE,
         }
     }
     pub fn get_rigid_bodies(&self) -> Vec<Box<dyn RigidBody>> {
@@ -45,36 +48,38 @@ impl Scene {
                 let rc1 = BouncingBall::new(2., pos1, radius_1);
                 vec![Box::new(rc0), Box::new(rc1)]
             }
+            Scene::Spring => {
+                let spring = Spring::new(10., vec2(world_size.x * 0.5 - 10., world_size.y * 0.2));
+                vec![Box::new(spring)]
+            }
         }
     }
     pub fn get_next_scene(&self) -> Self {
         match self {
             Scene::FallingSquares => Scene::BouncingBall,
-            Scene::BouncingBall => Scene::FallingSquares,
+            Scene::BouncingBall => Scene::Spring,
+            Scene::Spring => Scene::FallingSquares,
         }
     }
     pub fn get_variables(&self) -> Variables {
         match self {
-            Scene::FallingSquares => Variables {
-                g: Some(0.),
-                c: Some(1.),
-            },
-            Scene::BouncingBall => Variables {
-                g: Some(9.81),
-                c: Some(0.),
-            },
+            Scene::FallingSquares => Variables::new(Some(0.), Some(1.)),
+            Scene::BouncingBall => Variables::new(Some(9.81), Some(0.)),
+            Scene::Spring => Variables::new(Some(0.), Some(0.)),
         }
     }
     pub fn get_c_range(&self) -> RangeInclusive<f32> {
         match self {
             Scene::FallingSquares => (-1.)..=30.,
             Scene::BouncingBall => (-0.01)..=1.,
+            Scene::Spring => (-0.01)..=1.,
         }
     }
     pub fn get_c_default(&self) -> f32 {
         match self {
             Scene::FallingSquares => 1.,
             Scene::BouncingBall => 0.01,
+            Scene::Spring => 0.01,
         }
     }
     pub fn draw_background(&self) {

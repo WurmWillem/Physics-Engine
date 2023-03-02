@@ -1,6 +1,7 @@
-use crate::{engine::Variables, rigid_body::RigidBodyType};
 use egui_macroquad::egui::{self, Context};
 use macroquad::prelude::*;
+
+use crate::{engine::Variables, rigid_body::RigidBodyType};
 
 use crate::{
     rigid_body::{Forces, RigidBody},
@@ -120,7 +121,7 @@ impl RigidBody for BouncingBall {
         });
     }
     fn get_type(&self) -> RigidBodyType {
-        RigidBodyType::RigidBall
+        RigidBodyType::Ball
     }
     fn get_enabled(&self) -> bool {
         self.enabled

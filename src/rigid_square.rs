@@ -114,7 +114,7 @@ impl RigidBody for RigidSquare {
         });
     }
     fn get_type(&self) -> RigidBodyType {
-        RigidBodyType::RigidSquare
+        RigidBodyType::Square
     }
     fn get_enabled(&self) -> bool {
         self.enabled
