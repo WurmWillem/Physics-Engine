@@ -99,7 +99,7 @@ pub trait Format {
 }
 impl Format for f32 {
     fn format(&self, digits_after_decimal: usize) -> Self {
-        let f = *self * (10 as usize).pow(digits_after_decimal as u32) as f32; 
+        let f = *self * (10 as usize).pow(digits_after_decimal as u32) as f32;
         f.round() / (10 as usize).pow(digits_after_decimal as u32) as f32
     }
 }

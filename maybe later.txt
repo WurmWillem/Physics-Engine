@@ -20,3 +20,24 @@ impl Clone for Box<dyn RigidBody> {
         dyn_clone::clone(self)
     }
 }
+
+ /*
+                let distance_between_balls = self.pos.distance(rb.get_pos());
+                if distance_between_balls > self.radius + rb.get_radius() {
+                    continue;
+                }
+                let force = 0.5 * self.mass * self.vel.length_squared();
+                let dist = (self.pos - rb.get_pos()).normalize();
+                let force1 = 0.5 * rb.get_mass() * rb.get_vel().length_squared();
+                let dist1 = (rb.get_pos() - self.pos).normalize();
+
+                let vel = self.vel + force * dist - force1 * dist1;
+                let new_pos = self.pos + vel * delta_t;
+
+                if new_pos.distance(rb.get_pos()) < self.radius + rb.get_radius() {
+                    //pr("off");
+                    next_pos -= self.vel * delta_t
+                } else {
+                    self.vel += vel * delta_t * 0.1;
+                }
+                 */

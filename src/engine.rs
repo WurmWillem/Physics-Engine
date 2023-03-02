@@ -2,8 +2,7 @@ use egui_macroquad::egui::{self, Ui};
 use macroquad::prelude::*;
 
 use crate::{
-    pr,
-    rigid_body::{RigidBodies, RigidBodyType, Format},
+    rigid_body::{Format, RigidBodies, RigidBodyType},
     scenes::Scene,
 };
 
@@ -81,33 +80,9 @@ impl Engine {
                 let vel0 = force0 * dist0 - force1 * dist1;
                 let vel1 = force1 * dist1 - force0 * dist0;
 
-                //pr(force0 * dist0 - force1 * dist1);
-                //pr(force1 * dist1 - force0 * dist0);
-
-                self.rigid_bodies[j].set_vel(vel0 * 0.01);
-                self.rigid_bodies[i].set_vel(vel1 * 0.01);
-
+                self.rigid_bodies[j].set_vel(vel0 * 0.04);
+                self.rigid_bodies[i].set_vel(vel1 * 0.04);
                 return;
-                /*
-                let distance_between_balls = self.pos.distance(rb.get_pos());
-                if distance_between_balls > self.radius + rb.get_radius() {
-                    continue;
-                }
-                let force = 0.5 * self.mass * self.vel.length_squared();
-                let dist = (self.pos - rb.get_pos()).normalize();
-                let force1 = 0.5 * rb.get_mass() * rb.get_vel().length_squared();
-                let dist1 = (rb.get_pos() - self.pos).normalize();
-
-                let vel = self.vel + force * dist - force1 * dist1;
-                let new_pos = self.pos + vel * delta_t;
-
-                if new_pos.distance(rb.get_pos()) < self.radius + rb.get_radius() {
-                    //pr("off");
-                    next_pos -= self.vel * delta_t
-                } else {
-                    self.vel += vel * delta_t * 0.1;
-                }
-                 */
             }
         }
     }
