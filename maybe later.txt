@@ -41,3 +41,14 @@ impl Clone for Box<dyn RigidBody> {
                     self.vel += vel * delta_t * 0.1;
                 }
                  */
+
+/*let force0 = 0.5 * rb0.get_mass() * rb0.get_vel().length_squared();
+                let dist0 = (rb0.get_pos() - rb1.get_pos()).normalize();
+                let force1 = 0.5 * rb1.get_mass() * rb1.get_vel().length_squared();
+                let dist1 = (rb1.get_pos() - rb0.get_pos()).normalize();
+
+                let vel0 = force0 * dist0 - force1 * dist1;
+                let vel1 = force1 * dist1 - force0 * dist0;
+
+                self.rigid_bodies[j].set_vel(vel0 * 0.04);
+                self.rigid_bodies[i].set_vel(vel1 * 0.04);*/
