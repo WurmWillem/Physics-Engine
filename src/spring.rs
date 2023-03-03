@@ -80,8 +80,11 @@ impl RigidBody for Spring {
         //p = p + v * dt
         let next_pos = self.pos + self.vel * delta_time;
 
-        self.pos = next_pos;
-
+        if next_pos.y > 5. && next_pos.y < self.equilibrium * 2. - 5. {
+            self.pos = next_pos;
+        } else {
+            self.vel.y = 0.;
+        }
         self.forces.f_res = f_res;
         self.forces.f_spring = Some(f_res.y);
     }
@@ -115,13 +118,13 @@ impl RigidBody for Spring {
     fn update_based_on_ui(&mut self, egui_ctx: &egui_macroquad::egui::Context, index: usize) {
         egui::Window::new(format!("Spring {index}")).show(egui_ctx, |ui| {
             ui.set_max_width(200.);
-
             ui.horizontal(|ui| {
                 ui.checkbox(&mut self.enabled, "enabled");
                 if ui.button("Reset all").clicked() {
                     *self = Spring::new(self.default_mass, self.default_pos, self.default_size);
                 }
             });
+
             ui.collapsing("Show data", |ui| {
                 ui.heading("Data");
                 ui.label(format!("Size: {} m", self.size));

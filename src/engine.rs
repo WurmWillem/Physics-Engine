@@ -70,18 +70,37 @@ impl Engine {
 
                 let distance_between_balls = rb0.get_pos().distance(rb1.get_pos());
                 if distance_between_balls > rb0.get_radius() + rb1.get_radius() {
-                    continue;
+                    return;
                 }
-                let force0 = 0.5 * rb0.get_mass() * rb0.get_vel().length_squared();
-                let dist0 = (rb0.get_pos() - rb1.get_pos()).normalize();
-                let force1 = 0.5 * rb1.get_mass() * rb1.get_vel().length_squared();
-                let dist1 = (rb1.get_pos() - rb0.get_pos()).normalize();
 
-                let vel0 = force0 * dist0 - force1 * dist1;
-                let vel1 = force1 * dist1 - force0 * dist0;
+                // Collision normal, the direction in which the impulse will be applied
+                let normal = (rb1.get_pos() - rb0.get_pos()).normalize();
 
-                self.rigid_bodies[j].set_vel(vel0 * 0.04);
-                self.rigid_bodies[i].set_vel(vel1 * 0.04);
+                // Calculate relative velocity in terms of the normal direction
+                let relative_vel = rb1.get_vel() - rb0.get_vel();
+
+                let vel_along_normal = normal.dot(relative_vel);
+                if vel_along_normal > 0. {
+                    return;
+                }
+
+                // Coefficient of restitution, bounciness/elasticity. the higher the bouncier they will be
+                let e = 1.;
+
+                let inverse_mass_0 = 1. / rb0.get_mass();
+                let inverse_mass_1 = 1. / rb1.get_mass();
+
+                // Calculate impulse scalar
+                let mut jay = -(1. + e) * vel_along_normal;
+                jay /= inverse_mass_0 + inverse_mass_1;
+
+                //Calculate new velocity based on impulse
+                let impulse = jay * normal;
+                let new_vel_0 = rb0.get_vel() - inverse_mass_0 * impulse;
+                let new_vel_1 = rb1.get_vel() + inverse_mass_1 * impulse;
+
+                self.rigid_bodies[j].set_vel(new_vel_0);
+                self.rigid_bodies[i].set_vel(new_vel_1);
                 return;
             }
         }

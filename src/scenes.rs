@@ -39,14 +39,17 @@ impl Scene {
                 vec![Box::new(rs0), Box::new(rs1)]
             }
             Scene::BouncingBall => {
-                let radius_0 = 2.;
-                let radius_1 = 3.;
+                let radius_0 = 1.;
+                let radius_1 = 2.;
+                let radius_2 = 3.;
                 let pos0 = vec2(world_size.x * 0.4, world_size.y * 0.8 + radius_0);
                 let pos1 = vec2(world_size.x * 0.7, world_size.y * 0.8 + radius_1);
+                let pos2 = vec2(world_size.x * 0.1, world_size.y * 0.8 + radius_2);
 
                 let rc0 = BouncingBall::new(1., pos0, radius_0);
-                let rc1 = BouncingBall::new(2., pos1, radius_1);
-                vec![Box::new(rc0), Box::new(rc1)]
+                let rc1 = BouncingBall::new(4., pos1, radius_1);
+                let rc2 = BouncingBall::new(9., pos2, radius_2);
+                vec![Box::new(rc0), Box::new(rc1), Box::new(rc2)]
             }
             Scene::Spring => {
                 let pos = vec2(world_size.x * 0.5 - 10., world_size.y * 0.5);
