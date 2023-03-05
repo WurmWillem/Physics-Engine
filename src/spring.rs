@@ -160,7 +160,7 @@ impl RigidBody for Spring {
         self.mass
     }
     fn get_radius(&self) -> f32 {
-        panic!("Spring doesnt have radius field")
+        panic!("Spring doesn't have radius field")
     }
     fn set_vel(&mut self, new_vel: Vec2) {
         self.vel = new_vel;

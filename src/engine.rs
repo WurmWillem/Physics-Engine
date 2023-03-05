@@ -16,6 +16,7 @@ pub struct Engine {
     time_mult: f32,
     pause: bool,
     time_step_mode_enabled: bool,
+    show_entity_ui: bool,
     time_passed: f32,
 }
 impl Engine {
@@ -28,6 +29,7 @@ impl Engine {
             time_mult: 1.,
             pause: false,
             time_step_mode_enabled: false,
+            show_entity_ui: false,
             time_passed: 0.,
         }
     }
@@ -67,9 +69,11 @@ impl Engine {
                 {
                     continue;
                 }
+            
                 let rb0 = &self.rigid_bodies[j];
                 let rb1 = &self.rigid_bodies[i];
 
+                // Check if balls are colliding, continue to the next iteration if not
                 let distance_between_balls = rb0.get_pos().distance(rb1.get_pos());
                 if distance_between_balls > rb0.get_radius() + rb1.get_radius() {
                     continue;
@@ -97,15 +101,20 @@ impl Engine {
                 let mut jay = -(1. + e) * vel_along_normal;
                 jay /= inverse_mass_0 + inverse_mass_1;
 
+                // Calculate impulse, clamp the impulse so the simulation won't explode because of extreme velocies
+                let impulse = (jay * normal).clamp_length_max(10000.);
+
                 // Calculate new velocity based on impulse
-                let impulse = jay * normal;
                 let new_vel_0 = rb0.get_vel() - inverse_mass_0 * impulse;
                 let new_vel_1 = rb1.get_vel() + inverse_mass_1 * impulse;
+
+                //println!("{:?} {:?}", (inverse_mass_0 * impulse).length(), (inverse_mass_1 * impulse).length());
+                println!("{:?}", impulse.length());
+                
 
                 // Set new velocities
                 self.rigid_bodies[j].set_vel(new_vel_0);
                 self.rigid_bodies[i].set_vel(new_vel_1);
-                continue;
             }
         }
     }
@@ -115,12 +124,10 @@ impl Engine {
             egui::Window::new("Physics Engine").show(egui_ctx, |ui| {
                 ui.set_max_width(190.);
 
-                ui.horizontal(|ui| {
-                    ui.heading("General");
-                    if ui.button("Next scene").clicked() {
-                        *self = Engine::new(self.scene.get_next_scene());
-                    }
-                });
+                ui.heading("General");
+                if ui.button("Next scene").clicked() {
+                    *self = Engine::new(self.scene.get_next_scene());
+                }
 
                 ui.label(format!("FPS: {}", get_fps()));
                 ui.label(format!("time passed: {}", self.time_passed.format(2)));
@@ -133,20 +140,23 @@ impl Engine {
                         self.rigid_bodies = self.scene.get_rigid_bodies();
                     }
                 });
+                ui.checkbox(&mut self.show_entity_ui, "show entity ui");
                 ui.separator();
 
                 self.update_time(ui);
                 self.vars.update_ui(ui, self.scene);
             });
 
-            for i in 0..self.rigid_bodies.len() {
-                self.rigid_bodies[i].update_based_on_ui(egui_ctx, i + 1);
+            if self.show_entity_ui {
+                for i in 0..self.rigid_bodies.len() {
+                    self.rigid_bodies[i].update_based_on_ui(egui_ctx, i + 1);
+                }
             }
         });
     }
 
     fn update_time(&mut self, ui: &mut Ui) {
-        ui.collapsing("Show time", |ui| {
+        ui.collapsing("Show time settings", |ui| {
             ui.checkbox(&mut self.time_step_mode_enabled, "time step mode enabled");
             if self.time_step_mode_enabled {
                 ui.horizontal(|ui| {
