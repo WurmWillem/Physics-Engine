@@ -8,9 +8,6 @@ use crate::{
 };
 use macroquad::math::Vec2;
 
-pub const WORLD_SIZE: Vec2 = vec2(60., 52.5);
-pub const METRE_IN_PIXELS: Vec2 = vec2(SCREEN_SIZE.x / WORLD_SIZE.x, SCREEN_SIZE.y / WORLD_SIZE.y);
-
 #[derive(Debug, Clone, Copy)]
 pub struct RigidSquare {
     enabled: bool,
@@ -38,7 +35,7 @@ impl RigidSquare {
     }
 }
 impl RigidBody for RigidSquare {
-    fn apply_forces(&mut self, vars: Variables, delta_time: f32) {
+    fn apply_forces(&mut self, vars: Variables, delta_time: f32, scene_size: Vec2) {
         let g = match vars.g {
             Some(g_) => g_,
             None => panic!("g is None"),
@@ -67,28 +64,42 @@ impl RigidBody for RigidSquare {
         //p = p + v * dt
         let next_pos = self.pos + self.vel * delta_time;
 
-        if next_pos.y > WORLD_SIZE.y {
+        // Check next pos y for collisions with world corners
+        if next_pos.y > scene_size.y {
             self.vel.y = 0.;
-            self.pos.y = WORLD_SIZE.y;
-            f_res = Vec2::ZERO;
+            self.pos.y = scene_size.y;
+            f_res.y = 0.;
         } else if next_pos.y - self.size.y < 1. {
             self.vel.y = 0.;
             self.pos.y = self.size.y + 1.;
-            f_res = Vec2::ZERO;
+            f_res.y = 0.;
         } else {
-            self.pos = next_pos;
+            self.pos.y = next_pos.y;
         }
+        // Check next pos x for collisions with world corners
+        if next_pos.x + self.size.x > scene_size.x {
+            self.vel.x = 0.;
+            self.pos.x = scene_size.x - self.size.x;
+            f_res.x = 0.;
+        } else if next_pos.x < 0. {
+            self.vel.x = 0.;
+            self.pos.x = 0.;
+            f_res.x = 0.;
+        } else {
+            self.pos.x = next_pos.x;
+        }
+
         self.forces.f_res = f_res;
         self.forces.f_g = Some(f_g);
         self.forces.f_air = Some(f_air);
     }
 
-    fn draw(&self) {
+    fn draw(&self, metre_in_pixels: Vec2) {
         draw_rectangle(
-            self.pos.x * METRE_IN_PIXELS.x,
-            SCREEN_SIZE.y - self.pos.y * METRE_IN_PIXELS.y,
-            self.size.x * METRE_IN_PIXELS.x,
-            self.size.y * METRE_IN_PIXELS.y,
+            self.pos.x * metre_in_pixels.x,
+            SCREEN_SIZE.y - self.pos.y * metre_in_pixels.y,
+            self.size.x * metre_in_pixels.x,
+            self.size.y * metre_in_pixels.y,
             RED,
         );
     }
@@ -136,5 +147,8 @@ impl RigidBody for RigidSquare {
     }
     fn set_pos(&mut self, new_pos: Vec2) {
         self.pos = new_pos;
+    }
+    fn get_size(&self) -> Vec2 {
+        self.size
     }
 }

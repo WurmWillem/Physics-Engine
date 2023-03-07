@@ -10,13 +10,13 @@ mod spring;
 use engine::Engine;
 use scenes::Scene;
 
-pub const SCREEN_SIZE: Vec2 = vec2(800., 700.);
+pub const SCREEN_SIZE: Vec2 = vec2(800. * 1.5, 700.);
 
 #[macroquad::main("Physics Engine")]
 async fn main() {
     request_new_screen_size(SCREEN_SIZE.x, SCREEN_SIZE.y);
 
-    let mut engine = Engine::new(Scene::FallingSquares);
+    let mut engine = Engine::new(Scene::SquareAndBall);
 
     loop {
         clear_background(LIGHTGRAY);

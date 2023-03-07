@@ -8,9 +8,6 @@ use crate::{
     SCREEN_SIZE,
 };
 
-pub const WORLD_SIZE: Vec2 = vec2(40., 35.);
-pub const METRE_IN_PIXELS: Vec2 = vec2(SCREEN_SIZE.x / WORLD_SIZE.x, SCREEN_SIZE.y / WORLD_SIZE.y);
-
 #[derive(Debug, Clone, Copy)]
 pub struct BouncingBall {
     enabled: bool,
@@ -38,7 +35,7 @@ impl BouncingBall {
     }
 }
 impl RigidBody for BouncingBall {
-    fn apply_forces(&mut self, vars: Variables, delta_time: f32) {
+    fn apply_forces(&mut self, vars: Variables, delta_time: f32, scene_size: Vec2) {
         let g = match vars.g {
             Some(g_) => g_,
             None => panic!("g is None"),
@@ -67,15 +64,15 @@ impl RigidBody for BouncingBall {
         //p = p + v * dt
         let next_pos = self.pos + self.vel * delta_time;
 
-        if next_pos.y + self.radius > WORLD_SIZE.y {
+        if next_pos.y + self.radius > scene_size.y {
             self.vel.y *= -1.;
-            self.pos.y = WORLD_SIZE.y - self.radius;
+            self.pos.y = scene_size.y - self.radius;
         } else if next_pos.y - self.radius - 1. < 0. {
             self.vel.y *= -1.;
             self.pos.y = self.radius + 1.;
-        } else if next_pos.x + self.radius > WORLD_SIZE.x {
+        } else if next_pos.x + self.radius > scene_size.x {
             self.vel.x *= -1.;
-            self.pos.x = WORLD_SIZE.x - self.radius;
+            self.pos.x = scene_size.x - self.radius;
         } else if next_pos.x - self.radius < 0. {
             self.vel.x *= -1.;
             self.pos.x = self.radius;
@@ -87,11 +84,11 @@ impl RigidBody for BouncingBall {
         self.forces.f_air = Some(f_air);
     }
 
-    fn draw(&self) {
+    fn draw(&self, metre_in_pixels: Vec2) {
         draw_circle(
-            self.pos.x * METRE_IN_PIXELS.x,
-            SCREEN_SIZE.y - self.pos.y * METRE_IN_PIXELS.y,
-            self.radius * METRE_IN_PIXELS.x,
+            self.pos.x * metre_in_pixels.x,
+            SCREEN_SIZE.y - self.pos.y * metre_in_pixels.y,
+            self.radius * metre_in_pixels.x,
             RED,
         )
     }
@@ -143,5 +140,8 @@ impl RigidBody for BouncingBall {
     }
     fn set_pos(&mut self, new_pos: Vec2) {
         self.pos = new_pos;
+    }
+    fn get_size(&self) -> Vec2 {
+        panic!("bouncing ball doesn't have size property")
     }
 }

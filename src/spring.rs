@@ -7,9 +7,6 @@ use crate::{
     SCREEN_SIZE,
 };
 
-pub const WORLD_SIZE: Vec2 = vec2(60., 52.5);
-pub const METRE_IN_PIXELS: Vec2 = vec2(SCREEN_SIZE.x / WORLD_SIZE.x, SCREEN_SIZE.y / WORLD_SIZE.y);
-
 pub struct Spring {
     enabled: bool,
     mass: f32,
@@ -45,10 +42,10 @@ impl Spring {
     }
 }
 impl RigidBody for Spring {
-    fn apply_forces(&mut self, _vars: Variables, delta_time: f32) {
+    fn apply_forces(&mut self, _vars: Variables, delta_time: f32, scene_size: Vec2) {
         if is_mouse_button_down(MouseButton::Left) && !self.clicked {
-            let mut mouse_pos = (mouse_position_local() + 1.) * 0.5 * WORLD_SIZE;
-            mouse_pos.y = WORLD_SIZE.y - mouse_pos.y;
+            let mut mouse_pos = (mouse_position_local() + 1.) * 0.5 * scene_size;
+            mouse_pos.y = scene_size.y - mouse_pos.y;
             if self.contains(mouse_pos) {
                 self.clicked = true;
             }
@@ -57,7 +54,7 @@ impl RigidBody for Spring {
             self.clicked = false;
         }
         if self.clicked {
-            let mouse_y = WORLD_SIZE.y - (mouse_position_local().y + 1.) * 0.5 * WORLD_SIZE.y;
+            let mouse_y = scene_size.y - (mouse_position_local().y + 1.) * 0.5 * scene_size.y;
             if mouse_y > 5. && mouse_y < self.equilibrium * 2. - 5. {
                 self.pos.y = mouse_y;
             }
@@ -89,28 +86,28 @@ impl RigidBody for Spring {
         self.forces.f_spring = Some(f_res.y);
     }
 
-    fn draw(&self) {
+    fn draw(&self, metre_in_pixels: Vec2) {
         draw_rectangle(
-            self.pos.x * METRE_IN_PIXELS.x,
-            SCREEN_SIZE.y - self.pos.y * METRE_IN_PIXELS.y,
-            self.size.x * METRE_IN_PIXELS.x,
-            self.size.y * METRE_IN_PIXELS.y,
+            self.pos.x * metre_in_pixels.x,
+            SCREEN_SIZE.y - self.pos.y * metre_in_pixels.y,
+            self.size.x * metre_in_pixels.x,
+            self.size.y * metre_in_pixels.y,
             BLACK,
         );
         draw_line(
-            (self.pos.x + self.size.x * 0.5) * METRE_IN_PIXELS.x,
-            SCREEN_SIZE.y - self.pos.y * METRE_IN_PIXELS.y,
-            (self.pos.x + self.size.x * 0.5) * METRE_IN_PIXELS.x,
-            SCREEN_SIZE.y - METRE_IN_PIXELS.y,
+            (self.pos.x + self.size.x * 0.5) * metre_in_pixels.x,
+            SCREEN_SIZE.y - self.pos.y * metre_in_pixels.y,
+            (self.pos.x + self.size.x * 0.5) * metre_in_pixels.x,
+            SCREEN_SIZE.y - metre_in_pixels.y,
             self.size.x * 0.6,
             BLACK,
         );
         draw_line(
-            (self.pos.x + self.size.x * 0.2) * METRE_IN_PIXELS.x,
-            SCREEN_SIZE.y - METRE_IN_PIXELS.y * 1.5,
-            (self.pos.x + self.size.x * 0.8) * METRE_IN_PIXELS.x,
-            SCREEN_SIZE.y - METRE_IN_PIXELS.y * 1.5,
-            METRE_IN_PIXELS.y,
+            (self.pos.x + self.size.x * 0.2) * metre_in_pixels.x,
+            SCREEN_SIZE.y - metre_in_pixels.y * 1.5,
+            (self.pos.x + self.size.x * 0.8) * metre_in_pixels.x,
+            SCREEN_SIZE.y - metre_in_pixels.y * 1.5,
+            metre_in_pixels.y,
             BLACK,
         );
     }
@@ -167,6 +164,9 @@ impl RigidBody for Spring {
     }
     fn set_pos(&mut self, new_pos: Vec2) {
         self.pos = new_pos;
+    }
+    fn get_size(&self) -> Vec2 {
+        self.size
     }
 }
 impl Spring {

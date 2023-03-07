@@ -4,12 +4,11 @@ use macroquad::prelude::{vec2, Vec2};
 use crate::engine::Variables;
 
 pub type RigidBodies = Vec<Box<dyn RigidBody>>;
-
 const DIGITS_AFTER_DECIMAL: usize = 0;
 
 pub trait RigidBody {
-    fn apply_forces(&mut self, vars: Variables, delta_time: f32);
-    fn draw(&self);
+    fn apply_forces(&mut self, vars: Variables, delta_time: f32, scene_size: Vec2);
+    fn draw(&self, metre_in_pixels: Vec2);
     fn update_based_on_ui(&mut self, egui_ctx: &Context, index: usize);
     fn get_type(&self) -> RigidBodyType;
     fn get_enabled(&self) -> bool;
@@ -17,8 +16,29 @@ pub trait RigidBody {
     fn get_vel(&self) -> Vec2;
     fn get_mass(&self) -> f32;
     fn get_radius(&self) -> f32;
+    fn get_size(&self) -> Vec2;
     fn set_vel(&mut self, new_vel: Vec2);
     fn set_pos(&mut self, new_pos: Vec2);
+
+    fn colliding(&self, rb1: &Box<dyn RigidBody>) -> bool {
+        if self.get_type() == RigidBodyType::Ball && rb1.get_type() == RigidBodyType::Ball {
+            let dist_between_balls = self.get_pos().distance(rb1.get_pos());
+            return dist_between_balls < self.get_radius() + rb1.get_radius();
+        } else if self.get_type() == RigidBodyType::Square && rb1.get_type() == RigidBodyType::Ball
+        {
+            return rb1.get_pos().x + rb1.get_radius() > self.get_pos().x
+                && rb1.get_pos().x - rb1.get_radius() < self.get_pos().x + self.get_size().x
+                && rb1.get_pos().y + rb1.get_radius() > self.get_pos().y - self.get_size().y
+                && rb1.get_pos().y - rb1.get_radius() < self.get_pos().y;
+        } else if self.get_type() == RigidBodyType::Ball && rb1.get_type() == RigidBodyType::Square
+        {
+            return self.get_pos().x + self.get_radius() > rb1.get_pos().x
+                && self.get_pos().x - self.get_radius() < rb1.get_pos().x + rb1.get_size().x
+                && self.get_pos().y + self.get_radius() > rb1.get_pos().y - rb1.get_size().y
+                && self.get_pos().y - self.get_radius() < rb1.get_pos().y;
+        }
+        false
+    }
 
     fn update_default_properties_ui(&mut self, ui: &mut Ui, mass: &mut f32, default_pos: Vec2) {
         ui.horizontal(|ui| {
@@ -109,8 +129,8 @@ pub trait Format {
 }
 impl Format for f32 {
     fn format(&self, digits_after_decimal: usize) -> Self {
-        let f = *self * (10 as usize).pow(digits_after_decimal as u32) as f32;
-        f.round() / (10 as usize).pow(digits_after_decimal as u32) as f32
+        let f = *self * 10_usize.pow(digits_after_decimal as u32) as f32;
+        f.round() / 10_usize.pow(digits_after_decimal as u32) as f32
     }
 }
 impl Format for Vec2 {
