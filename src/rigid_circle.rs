@@ -9,7 +9,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Copy)]
-pub struct BouncingBall {
+pub struct RigidCircle {
     enabled: bool,
     mass: f32,
     radius: f32,
@@ -19,7 +19,7 @@ pub struct BouncingBall {
     default_pos: Vec2,
     default_mass: f32,
 }
-impl BouncingBall {
+impl RigidCircle {
     pub fn new(mass: f32, pos: Vec2, radius: f32) -> Self {
         let forces = Forces::new(true, true, false);
         Self {
@@ -34,7 +34,7 @@ impl BouncingBall {
         }
     }
 }
-impl RigidBody for BouncingBall {
+impl RigidBody for RigidCircle {
     fn apply_forces(&mut self, vars: Variables, delta_time: f32, scene_size: Vec2) {
         let g = match vars.g {
             Some(g_) => g_,
@@ -101,7 +101,7 @@ impl RigidBody for BouncingBall {
                 ui.horizontal(|ui| {
                     ui.checkbox(&mut self.enabled, "enabled");
                     if ui.button("Reset all").clicked() {
-                        *self = BouncingBall::new(self.default_mass, self.default_pos, self.radius);
+                        *self = RigidCircle::new(self.default_mass, self.default_pos, self.radius);
                     }
                 });
 
@@ -118,7 +118,7 @@ impl RigidBody for BouncingBall {
         });
     }
     fn get_type(&self) -> RigidBodyType {
-        RigidBodyType::Ball
+        RigidBodyType::Circle
     }
     fn get_enabled(&self) -> bool {
         self.enabled

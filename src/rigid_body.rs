@@ -21,21 +21,39 @@ pub trait RigidBody {
     fn set_pos(&mut self, new_pos: Vec2);
 
     fn colliding(&self, rb1: &Box<dyn RigidBody>) -> bool {
-        if self.get_type() == RigidBodyType::Ball && rb1.get_type() == RigidBodyType::Ball {
-            let dist_between_balls = self.get_pos().distance(rb1.get_pos());
-            return dist_between_balls < self.get_radius() + rb1.get_radius();
-        } else if self.get_type() == RigidBodyType::Square && rb1.get_type() == RigidBodyType::Ball
+        if self.get_type() == RigidBodyType::Circle && rb1.get_type() == RigidBodyType::Circle {
+            let dist_between_circles = self.get_pos().distance(rb1.get_pos());
+            return dist_between_circles < self.get_radius() + rb1.get_radius();
+        } else if self.get_type() == RigidBodyType::Square
+            && rb1.get_type() == RigidBodyType::Circle
         {
-            return rb1.get_pos().x + rb1.get_radius() > self.get_pos().x
-                && rb1.get_pos().x - rb1.get_radius() < self.get_pos().x + self.get_size().x
-                && rb1.get_pos().y + rb1.get_radius() > self.get_pos().y - self.get_size().y
-                && rb1.get_pos().y - rb1.get_radius() < self.get_pos().y;
-        } else if self.get_type() == RigidBodyType::Ball && rb1.get_type() == RigidBodyType::Square
+            let rect_size_half = self.get_size() * 0.5;
+            let circle_dist = vec2(
+                (rb1.get_pos().x - rect_size_half.x - self.get_pos().x).abs(),
+                (rb1.get_pos().y + rect_size_half.y - self.get_pos().y).abs(),
+            );
+
+            // Circle is too far away from rect to be colliding
+            if circle_dist.x > (rect_size_half.x + rb1.get_radius())
+                || circle_dist.y > (rect_size_half.y + rb1.get_radius())
+            {
+                return false;
+            }
+
+            // Circle is definitely colliding
+            if circle_dist.x <= rect_size_half.x || circle_dist.y <= rect_size_half.y {
+                return true;
+            }
+
+            // Check for corner case
+            let corner_dist_square = (circle_dist.x - rect_size_half.x).powi(2)
+                + (circle_dist.y - rect_size_half.y).powi(2);
+
+            return corner_dist_square <= rb1.get_radius().powi(2);
+        } else if self.get_type() == RigidBodyType::Circle
+            && rb1.get_type() == RigidBodyType::Square
         {
-            return self.get_pos().x + self.get_radius() > rb1.get_pos().x
-                && self.get_pos().x - self.get_radius() < rb1.get_pos().x + rb1.get_size().x
-                && self.get_pos().y + self.get_radius() > rb1.get_pos().y - rb1.get_size().y
-                && self.get_pos().y - self.get_radius() < rb1.get_pos().y;
+            
         }
         false
     }
@@ -70,7 +88,7 @@ pub trait RigidBody {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RigidBodyType {
     Square,
-    Ball,
+    Circle,
     Spring,
 }
 

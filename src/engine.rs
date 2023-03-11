@@ -71,6 +71,7 @@ impl Engine {
                 if !rb0.colliding(rb1) {
                     continue;
                 }
+                draw_rectangle(300., 300., 100., 100., BLACK);
 
                 // Collision normal, the direction in which the impulse will be applied
                 let normal = (rb1.get_pos() - rb0.get_pos()).normalize();
@@ -130,7 +131,13 @@ impl Engine {
                         self.rigid_bodies = self.scene.get_rigid_bodies();
                     }
                 });
-                ui.checkbox(&mut self.show_entity_ui, "show entity ui");
+                ui.horizontal(|ui| {
+                    ui.checkbox(&mut self.show_entity_ui, "show entity ui");
+                    if !self.time_step_mode_enabled {
+                        ui.checkbox(&mut self.pause, "pause");
+                    }
+                });
+
                 ui.separator();
 
                 self.update_time(ui);
@@ -166,7 +173,6 @@ impl Engine {
                     if ui.button("Reset to 1").clicked() {
                         self.time_mult = 1.;
                     }
-                    ui.checkbox(&mut self.pause, "pause");
                 });
             }
         });

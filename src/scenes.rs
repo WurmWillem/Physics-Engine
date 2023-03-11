@@ -3,8 +3,8 @@ use std::ops::RangeInclusive;
 use macroquad::prelude::*;
 
 use crate::{
-    bouncing_ball::BouncingBall, engine::Variables, rigid_body::RigidBody,
-    rigid_square::RigidSquare, spring::Spring, SCREEN_SIZE,
+    engine::Variables, rigid_body::RigidBody, rigid_circle::RigidCircle, rigid_square::RigidSquare,
+    spring::Spring, SCREEN_SIZE,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -44,10 +44,10 @@ impl Scene {
                 let pos2 = vec2(world_size.x * 0.6, world_size.y * 0.8 + radius_2);
                 let pos3 = vec2(world_size.x * 0.9, world_size.y * 0.8 + radius_3);
 
-                let rb0 = BouncingBall::new(1., pos0, radius_0);
-                let rb1 = BouncingBall::new(4., pos1, radius_1);
-                let rb2 = BouncingBall::new(9., pos2, radius_2);
-                let rb3 = BouncingBall::new(16., pos3, radius_3);
+                let rb0 = RigidCircle::new(1., pos0, radius_0);
+                let rb1 = RigidCircle::new(4., pos1, radius_1);
+                let rb2 = RigidCircle::new(9., pos2, radius_2);
+                let rb3 = RigidCircle::new(16., pos3, radius_3);
                 vec![Box::new(rb0), Box::new(rb1), Box::new(rb2), Box::new(rb3)]
             }
             Scene::SquareAndBall => {
@@ -65,10 +65,10 @@ impl Scene {
                 let pos2 = vec2(world_size.x * 0.6, world_size.y * 0.8 + radius_2);
                 let pos3 = vec2(world_size.x * 0.9, world_size.y * 0.8 + radius_3);
 
-                let rb0 = BouncingBall::new(1., pos0, radius_0);
-                let rb1 = BouncingBall::new(4., pos1, radius_1);
-                let rb2 = BouncingBall::new(9., pos2, radius_2);
-                let rb3 = BouncingBall::new(16., pos3, radius_3);
+                let rb0 = RigidCircle::new(1., pos0, radius_0);
+                let rb1 = RigidCircle::new(4., pos1, radius_1);
+                let rb2 = RigidCircle::new(9., pos2, radius_2);
+                let rb3 = RigidCircle::new(16., pos3, radius_3);
                 //let rb0 = BouncingBall::new(1., pos_ball, 2.);
                 vec![
                     Box::new(rs0),

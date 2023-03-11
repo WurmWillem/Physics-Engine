@@ -52,3 +52,17 @@ impl Clone for Box<dyn RigidBody> {
 
                 self.rigid_bodies[j].set_vel(vel0 * 0.04);
                 self.rigid_bodies[i].set_vel(vel1 * 0.04);*/
+
+
+
+                /*return rb1.get_pos().x + rb1.get_radius() > self.get_pos().x
+            && rb1.get_pos().x - rb1.get_radius() < self.get_pos().x + self.get_size().x
+            && rb1.get_pos().y + rb1.get_radius() > self.get_pos().y - self.get_size().y
+            && rb1.get_pos().y - rb1.get_radius() < self.get_pos().y;*/
+         /*else if self.get_type() == RigidBodyType::Ball && rb1.get_type() == RigidBodyType::Square
+          {
+              return self.get_pos().x + self.get_radius() > rb1.get_pos().x
+                  && self.get_pos().x - self.get_radius() < rb1.get_pos().x + rb1.get_size().x
+                  && self.get_pos().y + self.get_radius() > rb1.get_pos().y - rb1.get_size().y
+                  && self.get_pos().y - self.get_radius() < rb1.get_pos().y;
+          }*/
