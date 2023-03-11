@@ -10,7 +10,8 @@ mod spring;
 use engine::Engine;
 use scenes::Scene;
 
-pub const SCREEN_SIZE: Vec2 = vec2(800. * 1.5, 700.);
+pub const SCREEN_X_INCREASE: f32 = 1.5;
+pub const SCREEN_SIZE: Vec2 = vec2(700. * SCREEN_X_INCREASE, 700.);
 
 #[macroquad::main("Physics Engine")]
 async fn main() {

@@ -15,27 +15,35 @@ pub trait RigidBody {
     fn get_pos(&self) -> Vec2;
     fn get_vel(&self) -> Vec2;
     fn get_mass(&self) -> f32;
-    fn get_radius(&self) -> f32;
-    fn get_size(&self) -> Vec2;
+    fn get_radius(&self) -> Option<f32>;
+    fn get_size(&self) -> Option<Vec2>;
     fn set_vel(&mut self, new_vel: Vec2);
     fn set_pos(&mut self, new_pos: Vec2);
+    fn as_trait(&self) -> &dyn RigidBody;
 
     fn colliding(&self, rb1: &Box<dyn RigidBody>) -> bool {
         if self.get_type() == RigidBodyType::Circle && rb1.get_type() == RigidBodyType::Circle {
-            let dist_between_circles = self.get_pos().distance(rb1.get_pos());
-            return dist_between_circles < self.get_radius() + rb1.get_radius();
-        } else if self.get_type() == RigidBodyType::Square
-            && rb1.get_type() == RigidBodyType::Circle
+            if let Some(radius_0) = self.get_radius() {
+                if let Some(radius_1) = rb1.get_radius() {
+                    let dist_between_circles = self.get_pos().distance(rb1.get_pos());
+                    return dist_between_circles < radius_0 + radius_1;
+                }
+            }
+        } else if (self.get_type() == RigidBodyType::Square
+            && rb1.get_type() == RigidBodyType::Circle)
+            || (self.get_type() == RigidBodyType::Circle && rb1.get_type() == RigidBodyType::Square)
         {
-            let rect_size_half = self.get_size() * 0.5;
+            let (size, radius) = get_size_and_radius(self.as_trait(), rb1);
+
+            let rect_size_half = size * 0.5;
             let circle_dist = vec2(
                 (rb1.get_pos().x - rect_size_half.x - self.get_pos().x).abs(),
                 (rb1.get_pos().y + rect_size_half.y - self.get_pos().y).abs(),
             );
 
             // Circle is too far away from rect to be colliding
-            if circle_dist.x > (rect_size_half.x + rb1.get_radius())
-                || circle_dist.y > (rect_size_half.y + rb1.get_radius())
+            if circle_dist.x > (rect_size_half.x + radius)
+                || circle_dist.y > (rect_size_half.y + radius)
             {
                 return false;
             }
@@ -49,11 +57,7 @@ pub trait RigidBody {
             let corner_dist_square = (circle_dist.x - rect_size_half.x).powi(2)
                 + (circle_dist.y - rect_size_half.y).powi(2);
 
-            return corner_dist_square <= rb1.get_radius().powi(2);
-        } else if self.get_type() == RigidBodyType::Circle
-            && rb1.get_type() == RigidBodyType::Square
-        {
-            
+            return corner_dist_square <= radius.powi(2);
         }
         false
     }
@@ -83,6 +87,27 @@ pub trait RigidBody {
             }
         });
     }
+}
+
+fn get_size_and_radius(rb0: &dyn RigidBody, rb1: &Box<dyn RigidBody>) -> (Vec2, f32) {
+    let mut new_size = Vec2::ZERO;
+    let mut new_radius = 0.;
+    if let Some(s) = rb0.get_size() {
+        new_size = s;
+        if let Some(r) = rb1.get_radius() {
+            new_radius = r;
+        }
+    }
+    if let Some(s) = rb1.get_size() {
+        new_size = s;
+        if let Some(r) = rb0.get_radius() {
+            new_radius = r;
+        }
+    }
+    if new_size == Vec2::ZERO || new_radius == 0. {
+        panic!("Both properties are None")
+    }
+    (new_size, new_radius)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

@@ -4,7 +4,7 @@ use macroquad::prelude::*;
 
 use crate::{
     engine::Variables, rigid_body::RigidBody, rigid_circle::RigidCircle, rigid_square::RigidSquare,
-    spring::Spring, SCREEN_SIZE,
+    spring::Spring, SCREEN_SIZE, SCREEN_X_INCREASE,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -17,10 +17,10 @@ pub enum Scene {
 impl Scene {
     pub fn get_world_size(&self) -> Vec2 {
         match self {
-            Scene::FallingSquares => vec2(60. * 1.5, 52.5),
-            Scene::BouncingBall => vec2(40. * 1.5, 35.),
-            Scene::SquareAndBall => vec2(60. * 1.5, 52.5),
-            Scene::Spring => vec2(40., 35. * 1.5),
+            Scene::FallingSquares => vec2(60. * SCREEN_X_INCREASE, 60.),
+            Scene::BouncingBall => vec2(40. * SCREEN_X_INCREASE, 40.),
+            Scene::SquareAndBall => vec2(60. * SCREEN_X_INCREASE, 60.),
+            Scene::Spring => vec2(40. * SCREEN_X_INCREASE, 40.),
         }
     }
     pub fn get_rigid_bodies(&self) -> Vec<Box<dyn RigidBody>> {
@@ -53,7 +53,6 @@ impl Scene {
             Scene::SquareAndBall => {
                 let size_rs = vec2(6., 6.);
                 let pos_rs = vec2(world_size.x * 0.5 - size_rs.x * 0.5, world_size.y * 0.5);
-                //let pos_ball = vec2(world_size.x * 0.5, world_size.y * 0.8 + 2.);
 
                 let rs0 = RigidSquare::new(1., pos_rs, size_rs);
                 let radius_0 = 1.;
@@ -69,7 +68,6 @@ impl Scene {
                 let rb1 = RigidCircle::new(4., pos1, radius_1);
                 let rb2 = RigidCircle::new(9., pos2, radius_2);
                 let rb3 = RigidCircle::new(16., pos3, radius_3);
-                //let rb0 = BouncingBall::new(1., pos_ball, 2.);
                 vec![
                     Box::new(rs0),
                     Box::new(rb0),

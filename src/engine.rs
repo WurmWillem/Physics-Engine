@@ -71,7 +71,7 @@ impl Engine {
                 if !rb0.colliding(rb1) {
                     continue;
                 }
-                draw_rectangle(300., 300., 100., 100., BLACK);
+                //draw_rectangle(300., 300., 100., 100., BLACK);
 
                 // Collision normal, the direction in which the impulse will be applied
                 let normal = (rb1.get_pos() - rb0.get_pos()).normalize();
@@ -96,7 +96,7 @@ impl Engine {
                 let mut jay = -(1. + e) * vel_along_normal;
                 jay /= inverse_mass_0 + inverse_mass_1;
 
-                // Calculate impulse, clamp the impulse so the simulation won't explode because of extreme velocies
+                // Calculate impulse, clamp the impulse so the simulation won't explode because of extreme velocities
                 let impulse = (jay * normal).clamp_length_max(10000.);
 
                 // Calculate new velocity based on impulse

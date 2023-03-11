@@ -139,8 +139,8 @@ impl RigidBody for RigidSquare {
     fn get_mass(&self) -> f32 {
         self.mass
     }
-    fn get_radius(&self) -> f32 {
-        panic!("rigid_square does not have property radius")
+    fn get_radius(&self) -> Option<f32> {
+        None
     }
     fn set_vel(&mut self, new_vel: Vec2) {
         self.vel = new_vel;
@@ -148,7 +148,10 @@ impl RigidBody for RigidSquare {
     fn set_pos(&mut self, new_pos: Vec2) {
         self.pos = new_pos;
     }
-    fn get_size(&self) -> Vec2 {
-        self.size
+    fn get_size(&self) -> Option<Vec2> {
+        Some(self.size)
+    }
+    fn as_trait(&self) -> &dyn RigidBody {
+        self as &dyn RigidBody
     }
 }
