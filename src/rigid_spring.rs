@@ -7,7 +7,7 @@ use crate::{
     SCREEN_SIZE,
 };
 
-pub struct Spring {
+pub struct RigidSpring {
     enabled: bool,
     mass: f32,
     pos: Vec2,
@@ -22,7 +22,7 @@ pub struct Spring {
     default_pos: Vec2,
     default_size: Vec2,
 }
-impl Spring {
+impl RigidSpring {
     pub fn new(mass: f32, pos: Vec2, size: Vec2) -> Self {
         Self {
             enabled: true,
@@ -41,7 +41,7 @@ impl Spring {
         }
     }
 }
-impl RigidBody for Spring {
+impl RigidBody for RigidSpring {
     fn apply_forces(&mut self, _vars: Variables, delta_time: f32, scene_size: Vec2) {
         if is_mouse_button_down(MouseButton::Left) && !self.clicked {
             let mut mouse_pos = (mouse_position_local() + 1.) * 0.5 * scene_size;
@@ -62,10 +62,12 @@ impl RigidBody for Spring {
         self.u = self.equilibrium - self.pos.y;
 
         let mut f_res = Vec2::ZERO;
+        let mut f_spring = 0.;
 
         if !self.clicked {
             //F_spring = c * u
-            f_res.y += self.c * self.u;
+            f_spring = self.c * self.u;
+            f_res.y += f_spring;
         }
 
         //a = f / m
@@ -83,7 +85,7 @@ impl RigidBody for Spring {
             self.vel.y = 0.;
         }
         self.forces.f_res = f_res;
-        self.forces.f_spring = Some(f_res.y);
+        self.forces.f_spring = Some(f_spring);
     }
 
     fn draw(&self, metre_in_pixels: Vec2) {
@@ -118,7 +120,8 @@ impl RigidBody for Spring {
             ui.horizontal(|ui| {
                 ui.checkbox(&mut self.enabled, "enabled");
                 if ui.button("Reset all").clicked() {
-                    *self = Spring::new(self.default_mass, self.default_pos, self.default_size);
+                    *self =
+                        RigidSpring::new(self.default_mass, self.default_pos, self.default_size);
                 }
             });
 
@@ -172,7 +175,7 @@ impl RigidBody for Spring {
         self as &dyn RigidBody
     }
 }
-impl Spring {
+impl RigidSpring {
     fn contains(&self, point: Vec2) -> bool {
         point.x > self.pos.x
             && point.x < self.pos.x + self.size.x

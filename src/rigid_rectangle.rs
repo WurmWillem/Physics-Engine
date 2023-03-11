@@ -36,24 +36,23 @@ impl RigidSquare {
 }
 impl RigidBody for RigidSquare {
     fn apply_forces(&mut self, vars: Variables, delta_time: f32, scene_size: Vec2) {
-        let g = match vars.g {
-            Some(g_) => g_,
-            None => panic!("g is None"),
-        };
-        let c = match vars.c {
-            Some(c_) => c_,
-            None => panic!("c is None"),
-        };
-
         let mut f_res = Vec2::ZERO;
+        let mut f_g = None;
+        let mut f_air = None;
 
-        //Fz = m * g
-        let f_g = g * self.mass;
-        f_res.y -= f_g;
+        if let Some(g) = vars.g {
+            //Fz = m * g
+            let f_gravity = g * self.mass;
+            f_res.y -= f_gravity;
+            f_g = Some(f_gravity);
+        }
 
-        //F_Air = 0.5 * p * A * v*v = c * A * v*v in our case because k = 0.5 * p
-        let f_air = c * self.size.x * self.vel * self.vel.abs();
-        f_res -= f_air;
+        if let Some(c) = vars.c {
+            //F_Air = 0.5 * p * A * v*v = c * A * v*v in our case because k = 0.5 * p
+            let f_air_resistance = c * self.size.x * self.vel * self.vel.abs();
+            f_res -= f_air_resistance;
+            f_air = Some(f_air_resistance)
+        }
 
         //a = f / m
         let acc = f_res / self.mass;
@@ -90,8 +89,8 @@ impl RigidBody for RigidSquare {
         }
 
         self.forces.f_res = f_res;
-        self.forces.f_g = Some(f_g);
-        self.forces.f_air = Some(f_air);
+        self.forces.f_g = f_g;
+        self.forces.f_air = f_air;
     }
 
     fn draw(&self, metre_in_pixels: Vec2) {

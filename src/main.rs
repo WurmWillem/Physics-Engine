@@ -3,9 +3,9 @@ use macroquad::prelude::*;
 mod engine;
 mod rigid_body;
 mod rigid_circle;
-mod rigid_square;
+mod rigid_rectangle;
+mod rigid_spring;
 mod scenes;
-mod spring;
 
 use engine::Engine;
 use scenes::Scene;
@@ -17,7 +17,7 @@ pub const SCREEN_SIZE: Vec2 = vec2(700. * SCREEN_X_INCREASE, 700.);
 async fn main() {
     request_new_screen_size(SCREEN_SIZE.x, SCREEN_SIZE.y);
 
-    let mut engine = Engine::new(Scene::SquareAndBall);
+    let mut engine = Engine::new(Scene::FallingRectangles);
 
     loop {
         clear_background(LIGHTGRAY);
@@ -25,6 +25,7 @@ async fn main() {
         engine.update();
         engine.draw();
 
+        // Draw UI
         egui_macroquad::draw();
 
         next_frame().await

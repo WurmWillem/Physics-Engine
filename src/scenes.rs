@@ -3,30 +3,30 @@ use std::ops::RangeInclusive;
 use macroquad::prelude::*;
 
 use crate::{
-    engine::Variables, rigid_body::RigidBody, rigid_circle::RigidCircle, rigid_square::RigidSquare,
-    spring::Spring, SCREEN_SIZE, SCREEN_X_INCREASE,
+    engine::Variables, rigid_body::RigidBody, rigid_circle::RigidCircle,
+    rigid_rectangle::RigidSquare, rigid_spring::RigidSpring, SCREEN_SIZE, SCREEN_X_INCREASE,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Scene {
-    FallingSquares,
-    BouncingBall,
-    SquareAndBall,
+    FallingRectangles,
+    BouncingCircles,
+    RectAndCircle,
     Spring,
 }
 impl Scene {
     pub fn get_world_size(&self) -> Vec2 {
         match self {
-            Scene::FallingSquares => vec2(60. * SCREEN_X_INCREASE, 60.),
-            Scene::BouncingBall => vec2(40. * SCREEN_X_INCREASE, 40.),
-            Scene::SquareAndBall => vec2(60. * SCREEN_X_INCREASE, 60.),
+            Scene::FallingRectangles => vec2(60. * SCREEN_X_INCREASE, 60.),
+            Scene::BouncingCircles => vec2(40. * SCREEN_X_INCREASE, 40.),
+            Scene::RectAndCircle => vec2(60. * SCREEN_X_INCREASE, 60.),
             Scene::Spring => vec2(40. * SCREEN_X_INCREASE, 40.),
         }
     }
     pub fn get_rigid_bodies(&self) -> Vec<Box<dyn RigidBody>> {
         let world_size = self.get_world_size();
         match self {
-            Scene::FallingSquares => {
+            Scene::FallingRectangles => {
                 let pos0 = vec2(world_size.x * 0.45, world_size.y * 0.5);
                 let pos1 = vec2(world_size.x * 0.55, world_size.y * 0.5);
 
@@ -34,7 +34,7 @@ impl Scene {
                 let rs1 = RigidSquare::new(100., pos1, vec2(2., 2.));
                 vec![Box::new(rs0), Box::new(rs1)]
             }
-            Scene::BouncingBall => {
+            Scene::BouncingCircles => {
                 let radius_0 = 1.;
                 let radius_1 = 2.;
                 let radius_2 = 3.;
@@ -50,7 +50,7 @@ impl Scene {
                 let rb3 = RigidCircle::new(16., pos3, radius_3);
                 vec![Box::new(rb0), Box::new(rb1), Box::new(rb2), Box::new(rb3)]
             }
-            Scene::SquareAndBall => {
+            Scene::RectAndCircle => {
                 let size_rs = vec2(6., 6.);
                 let pos_rs = vec2(world_size.x * 0.5 - size_rs.x * 0.5, world_size.y * 0.5);
 
@@ -78,40 +78,40 @@ impl Scene {
             }
             Scene::Spring => {
                 let pos = vec2(world_size.x * 0.5 - 10., world_size.y * 0.5);
-                let spring = Spring::new(1., pos, vec2(30., 3.));
+                let spring = RigidSpring::new(1., pos, vec2(30., 3.));
                 vec![Box::new(spring)]
             }
         }
     }
     pub fn get_next_scene(&self) -> Self {
         match self {
-            Scene::FallingSquares => Scene::BouncingBall,
-            Scene::BouncingBall => Scene::SquareAndBall,
-            Scene::SquareAndBall => Scene::Spring,
-            Scene::Spring => Scene::FallingSquares,
+            Scene::FallingRectangles => Scene::BouncingCircles,
+            Scene::BouncingCircles => Scene::RectAndCircle,
+            Scene::RectAndCircle => Scene::Spring,
+            Scene::Spring => Scene::FallingRectangles,
         }
     }
     pub fn get_variables(&self) -> Variables {
         match self {
-            Scene::FallingSquares => Variables::new(Some(0.), Some(1.)),
-            Scene::BouncingBall => Variables::new(Some(9.81), Some(0.)),
-            Scene::SquareAndBall => Variables::new(Some(9.81), Some(0.)),
+            Scene::FallingRectangles => Variables::new(Some(0.), Some(1.)),
+            Scene::BouncingCircles => Variables::new(Some(9.81), Some(0.)),
+            Scene::RectAndCircle => Variables::new(Some(9.81), Some(0.)),
             Scene::Spring => Variables::new(None, None),
         }
     }
     pub fn get_c_range(&self) -> RangeInclusive<f32> {
         match self {
-            Scene::FallingSquares => (-1.)..=30.,
-            Scene::BouncingBall => (-0.01)..=1.,
-            Scene::SquareAndBall => (-0.01)..=1.,
+            Scene::FallingRectangles => (-1.)..=30.,
+            Scene::BouncingCircles => (-0.01)..=1.,
+            Scene::RectAndCircle => (-0.01)..=1.,
             Scene::Spring => (-0.01)..=1.,
         }
     }
     pub fn get_c_default(&self) -> f32 {
         match self {
-            Scene::FallingSquares => 1.,
-            Scene::BouncingBall => 0.01,
-            Scene::SquareAndBall => 0.01,
+            Scene::FallingRectangles => 1.,
+            Scene::BouncingCircles => 0.01,
+            Scene::RectAndCircle => 0.01,
             Scene::Spring => 0.01,
         }
     }
