@@ -13,6 +13,7 @@ pub struct RigidCircle {
     enabled: bool,
     mass: f32,
     radius: f32,
+    restitution: f32,
     pos: Vec2,
     vel: Vec2,
     forces: Forces,
@@ -26,8 +27,9 @@ impl RigidCircle {
             enabled: true,
             mass,
             radius,
+            restitution: 1.,
             pos,
-            vel: vec2(5., 0.),
+            vel: vec2(10., 0.),
             forces,
             default_pos: pos,
             default_mass: mass,
@@ -64,16 +66,16 @@ impl RigidBody for RigidCircle {
         let next_pos = self.pos + self.vel * delta_time;
 
         if next_pos.y + self.radius > scene_size.y {
-            self.vel.y *= -1.;
+            self.vel.y *= -self.restitution;
             self.pos.y = scene_size.y - self.radius;
         } else if next_pos.y - self.radius - 1. < 0. {
-            self.vel.y *= -1.;
+            self.vel.y *= -self.restitution;
             self.pos.y = self.radius + 1.;
         } else if next_pos.x + self.radius > scene_size.x {
-            self.vel.x *= -1.;
+            self.vel.x *= -self.restitution;
             self.pos.x = scene_size.x - self.radius;
         } else if next_pos.x - self.radius < 0. {
-            self.vel.x *= -1.;
+            self.vel.x *= -self.restitution;
             self.pos.x = self.radius;
         } else {
             self.pos = next_pos;
@@ -106,7 +108,10 @@ impl RigidBody for RigidCircle {
 
                 ui.collapsing("Show data", |ui| {
                     ui.heading("Data");
-                    ui.label(format!("Radius: {} m", self.radius));
+                    ui.horizontal(|ui| {
+                        ui.label("Restitution:");
+                        ui.add(egui::Slider::new(&mut self.restitution, (0.1)..=1.));
+                    });
 
                     let mut mass_copy = self.mass;
                     self.update_default_properties_ui(ui, &mut mass_copy, self.default_pos);
@@ -142,6 +147,9 @@ impl RigidBody for RigidCircle {
     }
     fn get_size(&self) -> Option<Vec2> {
         None
+    }
+    fn get_restitution(&self) -> Option<f32> {
+        Some(self.restitution)
     }
     fn as_trait(&self) -> &dyn RigidBody {
         self as &dyn RigidBody

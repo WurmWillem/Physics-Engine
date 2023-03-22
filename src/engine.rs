@@ -7,7 +7,7 @@ use crate::{
     SCREEN_SIZE,
 };
 
-const TIME_INCREMENT: f32 = 0.1;
+const TIME_INCREMENT: f32 = 0.01;
 
 pub struct Engine {
     scene: Scene,
@@ -64,14 +64,15 @@ impl Engine {
     fn resolve_collisions(&mut self) {
         for j in 0..self.rigid_bodies.len() {
             for i in j + 1..self.rigid_bodies.len() {
-                let rb0 = &self.rigid_bodies[j];
-                let rb1 = &self.rigid_bodies[i];
 
                 // Check if objects are colliding, continue to the next iteration if not
-                if !rb0.colliding(rb1) {
+                if !self.rigid_bodies[j].colliding(&self.rigid_bodies[i]) {
                     continue;
                 }
                 //draw_rectangle(300., 300., 100., 100., BLACK);
+
+                let rb0 = &self.rigid_bodies[j];
+                let rb1 = &self.rigid_bodies[i];
 
                 // Collision normal, the direction in which the impulse will be applied
                 let normal = (rb1.get_pos() - rb0.get_pos()).normalize();
@@ -82,30 +83,46 @@ impl Engine {
                 // Calculate relative velocity in terms of the normal direction
                 let vel_along_normal = normal.dot(relative_vel);
                 if vel_along_normal > 0. {
-                    continue;
+                    continue; // Only resolve collision if objects are moving towards each other
                 }
+                // v1* = v1 - J * n / m1
+                // v1* / v1 = -j * n / m1
+                //-j =  v1* / v1 / (n / m1) 
 
-                // Coefficient of restitution, bounciness/elasticity. From Newton's Law of Restitution
+                // Coefficient of restitution, bounciness/elasticity. From Newton's Law of Restitution 
+                // https://physics.stackexchange.com/questions/188030/newtons-law-of-restitution
                 // e = relative speed after collision / relative speed before collision, a value of 1 means the objects lose no velocity
-                let e = 1.;
+                let mut e = 1.;
+                if let Some(e1) = rb0.get_restitution() {
+                    e = e1;
+                    if let Some(e2) = rb1.get_restitution() {
+                        e = f32::min(e1, e2);
+                    }
+                }
 
                 let inverse_mass_0 = 1. / rb0.get_mass();
                 let inverse_mass_1 = 1. / rb1.get_mass();
 
                 // Calculate impulse scalar
-                let mut jay = -(1. + e) * vel_along_normal;
-                jay /= inverse_mass_0 + inverse_mass_1;
+                let mut impulse_scalar = -(1. + e) * vel_along_normal;
+                impulse_scalar /= inverse_mass_0 + inverse_mass_1;
+                //let impulse_scalar =  -(1. + e) * vel_along_normal * (rb0.get_mass() + rb1.get_mass());
 
                 // Calculate impulse, clamp the impulse so the simulation won't explode because of extreme velocities
-                let impulse = (jay * normal).clamp_length_max(10000.);
+                let impulse = (impulse_scalar * normal).clamp_length_max(10000.);
 
                 // Calculate new velocity based on impulse
                 let new_vel_0 = rb0.get_vel() - inverse_mass_0 * impulse;
                 let new_vel_1 = rb1.get_vel() + inverse_mass_1 * impulse;
+                //let new_pos_0 = rb0.get_pos() + normal * rb0.get_pos().distance(rb1.get_pos());
+                //let new_pos_1 = rb1.get_pos() - normal * rb0.get_pos().distance(rb1.get_pos());
 
                 // Set new velocities
                 self.rigid_bodies[j].set_vel(new_vel_0);
                 self.rigid_bodies[i].set_vel(new_vel_1);
+                
+                //self.rigid_bodies[j].set_pos(new_pos_0);
+                //self.rigid_bodies[i].set_pos(new_pos_1);
             }
         }
     }

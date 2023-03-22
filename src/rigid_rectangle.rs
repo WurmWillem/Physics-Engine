@@ -12,6 +12,7 @@ use macroquad::math::Vec2;
 pub struct RigidSquare {
     enabled: bool,
     mass: f32,
+    restitution: f32,
     pos: Vec2,
     vel: Vec2,
     size: Vec2,
@@ -27,6 +28,7 @@ impl RigidSquare {
             pos,
             vel: Vec2::ZERO,
             size,
+            restitution: 0.4,
             enabled: true,
             forces,
             default_pos: pos,
@@ -65,11 +67,11 @@ impl RigidBody for RigidSquare {
 
         // Check next pos y for collisions with world corners
         if next_pos.y > scene_size.y {
-            self.vel.y = 0.;
+            self.vel.y *= -self.restitution;
             self.pos.y = scene_size.y;
             f_res.y = 0.;
         } else if next_pos.y - self.size.y < 1. {
-            self.vel.y = 0.;
+            self.vel.y *= -self.restitution;
             self.pos.y = self.size.y + 1.;
             f_res.y = 0.;
         } else {
@@ -77,16 +79,32 @@ impl RigidBody for RigidSquare {
         }
         // Check next pos x for collisions with world corners
         if next_pos.x + self.size.x > scene_size.x {
-            self.vel.x = 0.;
+            self.vel.x *= -self.restitution;
             self.pos.x = scene_size.x - self.size.x;
             f_res.x = 0.;
         } else if next_pos.x < 0. {
-            self.vel.x = 0.;
+            self.vel.x *= -self.restitution;
             self.pos.x = 0.;
             f_res.x = 0.;
         } else {
             self.pos.x = next_pos.x;
         }
+
+        /*if next_pos.y + self.size.x > scene_size.y {
+            self.vel.y *= -1.;
+            self.pos.y = scene_size.y - self.size.y;
+        } else if next_pos.y - self.size.y - 1. < 0. {
+            self.vel.y *= -1.;
+            self.pos.y = self.size.y + 1.;
+        } else if next_pos.x + self.size.x > scene_size.x {
+            self.vel.x *= -1.;
+            self.pos.x = scene_size.x - self.size.x;
+        } else if next_pos.x - self.size.x < 0. {
+            self.vel.x *= -1.;
+            self.pos.x = self.size.x;
+        } else {
+            self.pos = next_pos;
+        }*/
 
         self.forces.f_res = f_res;
         self.forces.f_g = f_g;
@@ -114,8 +132,11 @@ impl RigidBody for RigidSquare {
             });
 
             ui.collapsing("Show data", |ui| {
-                ui.label(format!("Size: {} m", self.size));
-
+                ui.horizontal(|ui| {
+                    ui.label("Restitution:");
+                    ui.add(egui::Slider::new(&mut self.restitution, (0.1)..=1.));
+                });
+                
                 let mut mass_copy = self.mass;
                 self.update_default_properties_ui(ui, &mut mass_copy, self.default_pos);
                 self.mass = mass_copy;
@@ -149,6 +170,9 @@ impl RigidBody for RigidSquare {
     }
     fn get_size(&self) -> Option<Vec2> {
         Some(self.size)
+    }
+    fn get_restitution(&self) -> Option<f32> {
+        Some(self.restitution)
     }
     fn as_trait(&self) -> &dyn RigidBody {
         self as &dyn RigidBody

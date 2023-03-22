@@ -54,7 +54,7 @@ impl Scene {
                 let size_rs = vec2(6., 6.);
                 let pos_rs = vec2(world_size.x * 0.5 - size_rs.x * 0.5, world_size.y * 0.5);
 
-                let rs0 = RigidSquare::new(1., pos_rs, size_rs);
+                let rs0 = RigidSquare::new(12., pos_rs, size_rs);
                 let radius_0 = 1.;
                 let radius_1 = 2.;
                 let radius_2 = 3.;

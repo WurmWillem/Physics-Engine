@@ -10,12 +10,15 @@ mod scenes;
 use engine::Engine;
 use scenes::Scene;
 
-pub const SCREEN_X_INCREASE: f32 = 1.5;
+pub const SCREEN_X_INCREASE: f32 = 1.7;
 pub const SCREEN_SIZE: Vec2 = vec2(700. * SCREEN_X_INCREASE, 700.);
 
 #[macroquad::main("Physics Engine")]
 async fn main() {
     request_new_screen_size(SCREEN_SIZE.x, SCREEN_SIZE.y);
+
+    let mut fr = 0;
+    let mut f = 0.;
 
     let mut engine = Engine::new(Scene::FallingRectangles);
 
@@ -24,6 +27,14 @@ async fn main() {
 
         engine.update();
         engine.draw();
+
+        fr +=1;
+        f += get_frame_time();
+        if fr == 288 {
+            println!("{}", fr as f32 / f);
+            fr = 0;
+            f = 0.;
+        }
 
         // Draw UI
         egui_macroquad::draw();

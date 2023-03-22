@@ -17,6 +17,7 @@ pub trait RigidBody {
     fn get_mass(&self) -> f32;
     fn get_radius(&self) -> Option<f32>;
     fn get_size(&self) -> Option<Vec2>;
+    fn get_restitution(&self) -> Option<f32>;
     fn set_vel(&mut self, new_vel: Vec2);
     fn set_pos(&mut self, new_pos: Vec2);
     fn as_trait(&self) -> &dyn RigidBody;
@@ -63,11 +64,19 @@ pub trait RigidBody {
     }
 
     fn update_default_properties_ui(&mut self, ui: &mut Ui, mass: &mut f32, default_pos: Vec2) {
+        if let Some(radius) = self.get_radius() {
+            ui.label(format!("Radius: {} m", radius));
+        }
+        if let Some(size) = self.get_size() {
+            ui.label(format!("Size: {} m", size));
+        }
+
         ui.horizontal(|ui| {
             ui.label("Mass:");
             ui.add(egui::Slider::new(mass, (0.1)..=300.));
             ui.label("kg");
         });
+
         ui.horizontal(|ui| {
             ui.label(format!(
                 "Velocity: {} m/s",
@@ -77,6 +86,7 @@ pub trait RigidBody {
                 self.set_vel(Vec2::ZERO);
             }
         });
+
         ui.horizontal(|ui| {
             ui.label(format!(
                 "Position: {} m",
@@ -87,27 +97,6 @@ pub trait RigidBody {
             }
         });
     }
-}
-
-fn get_size_and_radius(rb0: &dyn RigidBody, rb1: &Box<dyn RigidBody>) -> (Vec2, f32) {
-    let mut new_size = Vec2::ZERO;
-    let mut new_radius = 0.;
-    if let Some(s) = rb0.get_size() {
-        new_size = s;
-        if let Some(r) = rb1.get_radius() {
-            new_radius = r;
-        }
-    }
-    if let Some(s) = rb1.get_size() {
-        new_size = s;
-        if let Some(r) = rb0.get_radius() {
-            new_radius = r;
-        }
-    }
-    if new_size == Vec2::ZERO || new_radius == 0. {
-        panic!("Both properties are None")
-    }
-    (new_size, new_radius)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -165,6 +154,27 @@ impl Forces {
             }
         });
     }
+}
+
+fn get_size_and_radius(rb0: &dyn RigidBody, rb1: &Box<dyn RigidBody>) -> (Vec2, f32) {
+    let mut new_size = Vec2::ZERO;
+    let mut new_radius = 0.;
+    if let Some(s) = rb0.get_size() {
+        new_size = s;
+        if let Some(r) = rb1.get_radius() {
+            new_radius = r;
+        }
+    }
+    if let Some(s) = rb1.get_size() {
+        new_size = s;
+        if let Some(r) = rb0.get_radius() {
+            new_radius = r;
+        }
+    }
+    if new_size == Vec2::ZERO || new_radius == 0. {
+        panic!("Both properties are None")
+    }
+    (new_size, new_radius)
 }
 
 pub trait Format {

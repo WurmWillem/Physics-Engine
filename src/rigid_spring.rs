@@ -162,6 +162,9 @@ impl RigidBody for RigidSpring {
     fn get_radius(&self) -> Option<f32> {
         None
     }
+    fn get_restitution(&self) -> Option<f32> {
+        None
+    }
     fn set_vel(&mut self, new_vel: Vec2) {
         self.vel = new_vel;
     }
