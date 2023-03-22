@@ -2,11 +2,12 @@ use egui_macroquad::egui::{self, Ui};
 use macroquad::prelude::*;
 
 use crate::{
-    rigid_body::{Format, RigidBodies, RigidBodyType},
+    rigid_body::{Format, RigidBodies},
     scenes::Scene,
+    SCREEN_SIZE,
 };
 
-const TIME_INCREMENT: f32 = 0.1;
+const TIME_INCREMENT: f32 = 0.01;
 
 pub struct Engine {
     scene: Scene,
@@ -16,6 +17,7 @@ pub struct Engine {
     time_mult: f32,
     pause: bool,
     time_step_mode_enabled: bool,
+    show_entity_ui: bool,
     time_passed: f32,
 }
 impl Engine {
@@ -28,6 +30,7 @@ impl Engine {
             time_mult: 1.,
             pause: false,
             time_step_mode_enabled: false,
+            show_entity_ui: false,
             time_passed: 0.,
         }
     }
@@ -39,7 +42,7 @@ impl Engine {
             let delta_time = self.time_mult * get_frame_time();
             self.rigid_bodies.iter_mut().for_each(|rb| {
                 if rb.get_enabled() {
-                    rb.apply_forces(self.vars, delta_time);
+                    rb.apply_forces(self.vars, delta_time, self.scene.get_world_size());
                 }
             });
         }
@@ -49,31 +52,27 @@ impl Engine {
     pub fn draw(&self) {
         self.scene.draw_background();
 
+        // Draw rigidbodies
+        let metre_in_pixels = SCREEN_SIZE / self.scene.get_world_size();
         self.rigid_bodies.iter().for_each(|rb| {
             if rb.get_enabled() {
-                rb.draw();
+                rb.draw(metre_in_pixels);
             }
         });
     }
 
     fn resolve_collisions(&mut self) {
         for j in 0..self.rigid_bodies.len() {
-            for i in 0..self.rigid_bodies.len() {
-                if j == i {
-                    break;
-                }
-                if self.rigid_bodies[j].get_type() == RigidBodyType::Square
-                    || self.rigid_bodies[i].get_type() == RigidBodyType::Square
-                {
+            for i in j + 1..self.rigid_bodies.len() {
+
+                // Check if objects are colliding, continue to the next iteration if not
+                if !self.rigid_bodies[j].colliding(&self.rigid_bodies[i]) {
                     continue;
                 }
+                //draw_rectangle(300., 300., 100., 100., BLACK);
+
                 let rb0 = &self.rigid_bodies[j];
                 let rb1 = &self.rigid_bodies[i];
-
-                let distance_between_balls = rb0.get_pos().distance(rb1.get_pos());
-                if distance_between_balls > rb0.get_radius() + rb1.get_radius() {
-                    continue;
-                }
 
                 // Collision normal, the direction in which the impulse will be applied
                 let normal = (rb1.get_pos() - rb0.get_pos()).normalize();
@@ -84,28 +83,46 @@ impl Engine {
                 // Calculate relative velocity in terms of the normal direction
                 let vel_along_normal = normal.dot(relative_vel);
                 if vel_along_normal > 0. {
-                    continue;
+                    continue; // Only resolve collision if objects are moving towards each other
                 }
+                // v1* = v1 - J * n / m1
+                // v1* / v1 = -j * n / m1
+                //-j =  v1* / v1 / (n / m1) 
 
-                // Coefficient of restitution, bounciness/elasticity. the higher the bouncier they will be
-                let e = 1.;
+                // Coefficient of restitution, bounciness/elasticity. From Newton's Law of Restitution 
+                // https://physics.stackexchange.com/questions/188030/newtons-law-of-restitution
+                // e = relative speed after collision / relative speed before collision, a value of 1 means the objects lose no velocity
+                let mut e = 1.;
+                if let Some(e1) = rb0.get_restitution() {
+                    e = e1;
+                    if let Some(e2) = rb1.get_restitution() {
+                        e = f32::min(e1, e2);
+                    }
+                }
 
                 let inverse_mass_0 = 1. / rb0.get_mass();
                 let inverse_mass_1 = 1. / rb1.get_mass();
 
                 // Calculate impulse scalar
-                let mut jay = -(1. + e) * vel_along_normal;
-                jay /= inverse_mass_0 + inverse_mass_1;
+                let mut impulse_scalar = -(1. + e) * vel_along_normal;
+                impulse_scalar /= inverse_mass_0 + inverse_mass_1;
+                //let impulse_scalar =  -(1. + e) * vel_along_normal * (rb0.get_mass() + rb1.get_mass());
+
+                // Calculate impulse, clamp the impulse so the simulation won't explode because of extreme velocities
+                let impulse = (impulse_scalar * normal).clamp_length_max(10000.);
 
                 // Calculate new velocity based on impulse
-                let impulse = jay * normal;
                 let new_vel_0 = rb0.get_vel() - inverse_mass_0 * impulse;
                 let new_vel_1 = rb1.get_vel() + inverse_mass_1 * impulse;
+                //let new_pos_0 = rb0.get_pos() + normal * rb0.get_pos().distance(rb1.get_pos());
+                //let new_pos_1 = rb1.get_pos() - normal * rb0.get_pos().distance(rb1.get_pos());
 
                 // Set new velocities
                 self.rigid_bodies[j].set_vel(new_vel_0);
                 self.rigid_bodies[i].set_vel(new_vel_1);
-                continue;
+                
+                //self.rigid_bodies[j].set_pos(new_pos_0);
+                //self.rigid_bodies[i].set_pos(new_pos_1);
             }
         }
     }
@@ -115,12 +132,10 @@ impl Engine {
             egui::Window::new("Physics Engine").show(egui_ctx, |ui| {
                 ui.set_max_width(190.);
 
-                ui.horizontal(|ui| {
-                    ui.heading("General");
-                    if ui.button("Next scene").clicked() {
-                        *self = Engine::new(self.scene.get_next_scene());
-                    }
-                });
+                ui.heading("General");
+                if ui.button("Next scene").clicked() {
+                    *self = Engine::new(self.scene.get_next_scene());
+                }
 
                 ui.label(format!("FPS: {}", get_fps()));
                 ui.label(format!("time passed: {}", self.time_passed.format(2)));
@@ -133,20 +148,29 @@ impl Engine {
                         self.rigid_bodies = self.scene.get_rigid_bodies();
                     }
                 });
+                ui.horizontal(|ui| {
+                    ui.checkbox(&mut self.show_entity_ui, "show entity ui");
+                    if !self.time_step_mode_enabled {
+                        ui.checkbox(&mut self.pause, "pause");
+                    }
+                });
+
                 ui.separator();
 
                 self.update_time(ui);
                 self.vars.update_ui(ui, self.scene);
             });
 
-            for i in 0..self.rigid_bodies.len() {
-                self.rigid_bodies[i].update_based_on_ui(egui_ctx, i + 1);
+            if self.show_entity_ui {
+                for i in 0..self.rigid_bodies.len() {
+                    self.rigid_bodies[i].update_based_on_ui(egui_ctx, i + 1);
+                }
             }
         });
     }
 
     fn update_time(&mut self, ui: &mut Ui) {
-        ui.collapsing("Show time", |ui| {
+        ui.collapsing("Show time settings", |ui| {
             ui.checkbox(&mut self.time_step_mode_enabled, "time step mode enabled");
             if self.time_step_mode_enabled {
                 ui.horizontal(|ui| {
@@ -158,7 +182,7 @@ impl Engine {
                 });
             } else {
                 ui.horizontal(|ui| {
-                    ui.label(format!("Time multiplier: "))
+                    ui.label("Time multiplier: ")
                         .on_hover_text("delta time gets multiplied by this");
                     ui.add(egui::Slider::new(&mut self.time_mult, (0.)..=10.));
                 });
@@ -166,7 +190,6 @@ impl Engine {
                     if ui.button("Reset to 1").clicked() {
                         self.time_mult = 1.;
                     }
-                    ui.checkbox(&mut self.pause, "pause");
                 });
             }
         });
@@ -180,7 +203,7 @@ impl Engine {
             self.time_passed += increment;
             self.rigid_bodies.iter_mut().for_each(|rb| {
                 if rb.get_enabled() {
-                    rb.apply_forces(self.vars, increment);
+                    rb.apply_forces(self.vars, increment, self.scene.get_world_size());
                 }
             });
         }

@@ -1,22 +1,26 @@
 use macroquad::prelude::*;
 
-mod bouncing_ball;
 mod engine;
 mod rigid_body;
-mod rigid_square;
+mod rigid_circle;
+mod rigid_rectangle;
+mod rigid_spring;
 mod scenes;
-mod spring;
 
 use engine::Engine;
 use scenes::Scene;
 
-pub const SCREEN_SIZE: Vec2 = vec2(800., 700.);
+pub const SCREEN_X_INCREASE: f32 = 1.7;
+pub const SCREEN_SIZE: Vec2 = vec2(700. * SCREEN_X_INCREASE, 700.);
 
 #[macroquad::main("Physics Engine")]
 async fn main() {
     request_new_screen_size(SCREEN_SIZE.x, SCREEN_SIZE.y);
 
-    let mut engine = Engine::new(Scene::BouncingBall);
+    let mut fr = 0;
+    let mut f = 0.;
+
+    let mut engine = Engine::new(Scene::FallingRectangles);
 
     loop {
         clear_background(LIGHTGRAY);
@@ -24,6 +28,15 @@ async fn main() {
         engine.update();
         engine.draw();
 
+        fr +=1;
+        f += get_frame_time();
+        if fr == 288 {
+            println!("{}", fr as f32 / f);
+            fr = 0;
+            f = 0.;
+        }
+
+        // Draw UI
         egui_macroquad::draw();
 
         next_frame().await
