@@ -86,7 +86,7 @@ impl Scene {
     pub fn get_next_scene(&self) -> Self {
         match self {
             Scene::FallingRectangles => Scene::BouncingCircles,
-            Scene::BouncingCircles => Scene::RectAndCircle,
+            Scene::BouncingCircles => Scene::Spring,
             Scene::RectAndCircle => Scene::Spring,
             Scene::Spring => Scene::FallingRectangles,
         }
